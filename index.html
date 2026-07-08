@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCC — MGA Wednesday Night Scramble</title>
+<style>
+/* =========================================================================
+   THEME TOKENS — a paper scorecard: card stock, fairway-green ink,
+   tee-marker tan rules, flag red used only for the low round + danger.
+   ========================================================================= */
+:root{
+  --paper:#f2efe6;        /* card stock */
+  --card:#fbf9f3;         /* panel */
+  --card2:#f5f2e9;        /* inset panel */
+  --ink:#24312a;          /* green-black ink */
+  --muted:#6d7a70;
+  --fairway:#34694b;
+  --fairway-deep:#21503a;
+  --tee:#c3b68d;          /* sand tan rules */
+  --tee-soft:#ddd5bd;
+  --flag:#b0402f;         /* low round + danger */
+  --chip:#e9e4d5;
+  --shadow:0 1px 2px rgba(36,49,42,.08), 0 4px 14px rgba(36,49,42,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#141b17; --card:#1b2420; --card2:#161e1a;
+    --ink:#e8ece7; --muted:#95a49a;
+    --fairway:#5b9c77; --fairway-deep:#7ab493;
+    --tee:#4a5a50; --tee-soft:#33403a;
+    --flag:#e0705c; --chip:#243029;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.45; padding-bottom:64px;
+}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--fairway); outline-offset:2px; border-radius:4px;}
+
+/* ---------- Masthead: engraved-scorecard strip ---------- */
+.masthead{
+  background:var(--fairway-deep); color:#f4f1e6; text-align:center;
+  padding:20px 16px 16px; border-bottom:4px double var(--tee);
+}
+.club-logo{
+  width:92px; height:92px; border-radius:50%; background:#fff;
+  border:3px solid var(--tee); display:block; margin:0 auto 10px;
+  object-fit:cover;
+}
+.masthead h1{
+  margin:0; font-family:Georgia,"Times New Roman",serif; font-weight:400;
+  text-transform:uppercase;
+}
+.masthead h1 span{display:block;}
+.t-club{font-size:.92rem; letter-spacing:.24em; opacity:.9;}
+.t-night{font-size:1.85rem; letter-spacing:.1em; margin:2px 0;}
+.t-scramble{font-size:1rem; letter-spacing:.42em; padding-left:.42em; opacity:.92;}
+.masthead .sub{
+  margin:6px 0 0; font-size:.76rem; letter-spacing:.08em; text-transform:uppercase;
+  opacity:.85;
+}
+#todayDate{font-size:.84rem; margin-top:10px; opacity:.95;}
+@media (prefers-color-scheme: dark){ .masthead{color:#e8ece7;} }
+
+main{max-width:780px; margin:18px auto 0; padding:0 12px;}
+
+/* ---------- Cards with scorecard "eyebrow" headers ---------- */
+.card{
+  background:var(--card); border:1px solid var(--tee-soft); border-radius:10px;
+  box-shadow:var(--shadow); padding:16px; margin-bottom:16px;
+}
+.eyebrow{
+  display:flex; align-items:center; gap:10px; margin:0 0 12px;
+  font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--fairway);
+}
+.eyebrow::after{content:""; flex:1; border-top:1px solid var(--tee-soft);}
+details.card > summary{
+  cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px;
+  font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--fairway);
+}
+details.card > summary::after{content:""; flex:1; border-top:1px solid var(--tee-soft);}
+details.card > summary::before{content:"▸"; transition:transform .15s;}
+details.card[open] > summary::before{transform:rotate(90deg);}
+details.card[open] > summary{margin-bottom:12px;}
+@media (prefers-reduced-motion: reduce){ details.card > summary::before{transition:none;} }
+
+label{font-size:.8rem; color:var(--muted); display:block;}
+input[type=text], input[type=search], textarea{
+  width:100%; padding:9px 11px; border:1px solid var(--tee-soft); border-radius:7px;
+  font-size:.95rem; margin-top:4px; background:var(--card2); color:var(--ink);
+  font-family:inherit; resize:vertical;
+}
+.row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.btn-group{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+
+/* ---------- Buttons ---------- */
+button.btn{
+  border:none; border-radius:7px; padding:10px 15px; font-size:.88rem; cursor:pointer;
+  background:var(--fairway); color:#fff; font-weight:600;
+}
+button.btn:hover{filter:brightness(1.06);}
+button.btn.secondary{background:transparent; color:var(--fairway); border:1.5px solid var(--fairway); font-weight:600;}
+button.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--tee-soft); font-weight:500;}
+button.btn.danger{background:transparent; color:var(--flag); border:1px solid var(--flag);}
+button.btn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
+@media (prefers-color-scheme: dark){ button.btn{color:#10160f;} }
+
+.small-note{font-size:.76rem; color:var(--muted); margin-top:8px;}
+.count-badge{font-size:.78rem; color:var(--muted); font-variant-numeric:tabular-nums;}
+.preview-line{font-size:.82rem; color:var(--fairway); font-weight:600; margin-top:6px; min-height:1.2em;}
+.preview-line.warn{color:var(--flag);}
+
+/* ---------- Roster chip grid ---------- */
+.roster-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+  gap:7px; margin-top:12px; max-height:340px; overflow-y:auto; padding:2px;
+}
+.roster-cell{display:flex; gap:4px; align-items:stretch;}
+.player-select{
+  flex:1; text-align:left; border-radius:7px; padding:8px 10px; font-size:.86rem;
+  background:var(--chip); color:var(--ink); border:1px solid var(--tee-soft);
+  cursor:pointer; transition:background .12s, color .12s;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.player-select.selected{background:var(--fairway); color:#fff; border-color:var(--fairway-deep); font-weight:600;}
+@media (prefers-color-scheme: dark){ .player-select.selected{color:#10160f;} }
+@media (prefers-reduced-motion: reduce){ .player-select{transition:none;} }
+.del-btn{
+  flex:0 0 auto; background:none; border:1px solid transparent; color:var(--muted);
+  font-size:.8rem; cursor:pointer; padding:0 7px; border-radius:6px;
+}
+.del-btn:hover{color:var(--flag); border-color:var(--flag);}
+.empty-msg{color:var(--muted); font-size:.88rem; font-style:italic;}
+
+/* =========================================================================
+   THE SCORECARD (signature element) — dotted leader lines from teams to
+   pencil-style score cells; red flag marks the current low round.
+   ========================================================================= */
+.hole-block{
+  border:1px solid var(--tee-soft); border-radius:9px; background:var(--card2);
+  margin-bottom:12px; overflow:hidden;
+}
+.hole-head{
+  display:flex; align-items:baseline; gap:10px; padding:8px 12px;
+  background:linear-gradient(to right, var(--fairway), var(--fairway-deep));
+  color:#f4f1e6;
+}
+.hole-head .hole-num{
+  font-family:Georgia,serif; font-size:1.05rem; letter-spacing:.06em;
+}
+.hole-head .hole-par{font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; opacity:.85;}
+.team-row{
+  display:flex; align-items:center; gap:10px; padding:9px 12px;
+  border-top:1px dashed var(--tee-soft);
+}
+.team-row:first-of-type{border-top:none;}
+.team-names{flex:1; display:flex; align-items:center; gap:0; min-width:0; flex-wrap:wrap;}
+.pname{font-size:.93rem;}
+.pname.swappable{
+  cursor:pointer; padding:2px 6px; border-radius:5px; border:1px dashed var(--fairway);
+  margin:1px 2px;
+}
+.pname.swappable:hover{background:var(--chip);}
+.pname.swap-picked{background:var(--fairway); color:#fff; border-style:solid;}
+@media (prefers-color-scheme: dark){ .pname.swap-picked{color:#10160f;} }
+.pjoin{color:var(--muted); padding:0 5px;}
+.own-ball{font-size:.74rem; color:var(--muted); font-style:italic; padding-left:6px;}
+.leader-line{
+  flex:1 1 30px; min-width:20px; border-bottom:2px dotted var(--tee);
+  transform:translateY(4px);
+}
+.score-cell{display:flex; align-items:center; gap:5px; flex:0 0 auto;}
+.score-btn{
+  border:1px solid var(--tee-soft); background:var(--card); color:var(--fairway);
+  border-radius:6px; font-size:.7rem; font-weight:700; letter-spacing:.05em;
+  padding:6px 9px; cursor:pointer; text-transform:uppercase;
+}
+.score-btn:hover{background:var(--fairway); color:#fff;}
+.score-value{
+  min-width:52px; text-align:center; font-weight:700; font-size:1rem;
+  font-variant-numeric:tabular-nums; color:var(--ink);
+  border-bottom:2px solid var(--tee); padding:2px 4px;
+}
+.score-value.leader{color:var(--flag);}
+.flag-mark{color:var(--flag); font-size:.95rem; margin-right:2px;}
+.results-meta{font-size:.8rem; color:var(--muted); margin:4px 0 12px;}
+.results-meta .flag-mark{margin-right:4px;}
+.warn-note{font-size:.8rem; color:var(--flag); margin:0 0 10px; font-weight:600;}
+
+/* ---------- Save-week form ---------- */
+.save-week-wrap{margin-top:18px; padding-top:14px; border-top:2px dotted var(--tee);}
+
+/* ---------- Standings ---------- */
+table.standings{
+  width:100%; border-collapse:collapse; font-size:.86rem; margin-top:4px;
+  font-variant-numeric:tabular-nums;
+}
+table.standings th{
+  text-align:left; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); font-weight:700; padding:4px 8px; border-bottom:2px solid var(--tee-soft);
+}
+table.standings td{padding:6px 8px; border-bottom:1px dashed var(--tee-soft);}
+table.standings tr:first-child td{font-weight:700;}
+table.standings td.num, table.standings th.num{text-align:right;}
+
+/* ---------- History entries ---------- */
+details.week-entry{
+  border:1px solid var(--tee-soft); border-radius:8px; background:var(--card2);
+  margin-bottom:9px; padding:0;
+}
+details.week-entry > summary{
+  cursor:pointer; padding:9px 12px; display:flex; align-items:baseline; gap:8px;
+  flex-wrap:wrap; list-style:none;
+}
+details.week-entry > summary::-webkit-details-marker{display:none;}
+.we-label{font-weight:700; font-size:.9rem;}
+.we-date{font-size:.74rem; color:var(--muted);}
+.we-low{font-size:.78rem; color:var(--flag); margin-left:auto; font-variant-numeric:tabular-nums;}
+.we-body{padding:2px 12px 12px; font-size:.86rem;}
+.we-body .hline{padding:2px 0; font-variant-numeric:tabular-nums;}
+.we-body .hline b{color:var(--fairway);}
+.we-attendees, .we-notes{font-size:.78rem; color:var(--muted); margin-top:6px;}
+.we-actions{margin-top:8px;}
+
+/* ---------- Toasts ---------- */
+#toastWrap{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  display:flex; flex-direction:column; gap:8px; z-index:50; align-items:center;
+}
+.toast{
+  background:var(--ink); color:var(--paper); padding:9px 16px; border-radius:8px;
+  font-size:.85rem; box-shadow:var(--shadow); max-width:90vw;
+}
+
+/* ---------- Course setup ---------- */
+.hole-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); gap:7px; margin-top:10px;}
+.hole-cell{display:flex; flex-direction:column; border:1px solid var(--tee-soft); border-radius:8px; overflow:hidden; background:var(--chip); text-align:center;}
+.hole-cell.active{background:var(--fairway); border-color:var(--fairway-deep);}
+.hole-toggle{border:none; background:transparent; cursor:pointer; padding:8px 4px 2px; font-weight:700; font-size:1rem; color:var(--ink); font-variant-numeric:tabular-nums;}
+.hole-cell.active .hole-toggle{color:#fff;}
+.par-btn{border:none; background:transparent; cursor:pointer; font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:0 4px 7px;}
+.hole-cell.active .par-btn{color:rgba(255,255,255,.85);}
+@media (prefers-color-scheme: dark){
+  .hole-cell.active .hole-toggle{color:#10160f;}
+  .hole-cell.active .par-btn{color:rgba(16,22,15,.75);}
+}
+
+/* ---------- Payouts ---------- */
+input[type=number]{
+  width:100%; padding:9px 11px; border:1px solid var(--tee-soft); border-radius:7px;
+  font-size:.95rem; margin-top:4px; background:var(--card2); color:var(--ink);
+}
+.payout-block{border:1px solid var(--tee-soft); border-radius:9px; background:var(--card2); padding:4px 12px 8px; margin-top:12px;}
+.payout-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px dashed var(--tee-soft); font-size:.92rem;}
+.payout-row:first-child{border-top:none;}
+.payout-row .amount{font-weight:700; font-variant-numeric:tabular-nums;}
+.payout-row.place .amount{color:var(--fairway); font-size:1rem;}
+.payout-row.pool{border-top:2px solid var(--tee);}
+
+/* ---------- Inline add-player ---------- */
+.add-inline{
+  width:100%; margin-top:12px; text-align:left; border:1.5px dashed var(--fairway);
+  background:transparent; color:var(--fairway); border-radius:8px; padding:10px 12px;
+  font-size:.9rem; font-weight:600; cursor:pointer;
+}
+.add-inline:hover{background:var(--chip);}
+
+/* =========================================================================
+   TV DISPLAY MODE — optimized for casting to a 1920x1080 screen.
+   Hides all setup; shows today's card, payouts, and standings, big.
+   ========================================================================= */
+#floatBtns{position:fixed; top:12px; right:12px; z-index:60; display:flex; gap:8px;}
+#floatBtns button{
+  border:1.5px solid var(--tee); background:var(--fairway-deep); color:#f4f1e6;
+  border-radius:8px; padding:9px 14px; font-size:.85rem; font-weight:600; cursor:pointer;
+  box-shadow:var(--shadow);
+}
+#floatBtns button:hover{filter:brightness(1.12);}
+
+body.tv-mode{font-size:19px; overflow-x:hidden;}
+body.tv-mode main{display:none;}
+body.tv-mode #tvBoard{display:grid;}
+
+#tvBoard{
+  grid-template-columns:1fr; gap:20px; align-items:start;
+  max-width:1920px; margin:0 auto; padding:24px 36px 40px;
+}
+.tv-col-title{
+  font-family:Georgia,serif; font-size:1.15rem; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--fairway); margin:0 0 12px;
+  border-bottom:2px solid var(--tee-soft); padding-bottom:6px;
+}
+.tv-holes{display:block; column-count:2; column-gap:14px;}   /* fills top-down, then across */
+#tvBoard .hole-block{margin-bottom:14px; break-inside:avoid; -webkit-column-break-inside:avoid;}
+#tvBoard .hole-head{padding:9px 14px;}
+#tvBoard .hole-num{font-size:1.15rem;}
+#tvBoard .team-row{padding:11px 14px;}
+#tvBoard .pname{font-size:1.05rem;}
+#tvBoard .score-value{min-width:66px; font-size:1.25rem;}
+#tvBoard .score-btn{padding:9px 13px; font-size:.8rem;}
+#tvBoard .results-meta{font-size:.95rem;}
+#tvBoard .payout-row{font-size:1.02rem; padding:10px 0;}
+#tvBoard .payout-row.place .amount{font-size:1.2rem;}
+#tvBoard .tv-side > * + .tv-panel{margin-top:22px;}
+.tv-empty{color:var(--muted); font-style:italic; font-size:1.05rem;}
+
+/* Payout math spread across the top of the dashboard */
+.tv-paytop{
+  grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:stretch; gap:10px;
+}
+.pay-strip-title{
+  align-self:center; font-family:Georgia,serif; font-size:1rem; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--fairway); padding-right:6px;
+}
+.pay-chip{
+  display:flex; flex-direction:column; justify-content:center; gap:2px;
+  border:1px solid var(--tee-soft); background:var(--card); border-radius:9px;
+  padding:8px 16px; box-shadow:var(--shadow);
+}
+.pay-chip .pay-label{
+  font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);
+  white-space:nowrap;
+}
+.pay-chip .pay-amount{
+  font-weight:700; font-variant-numeric:tabular-nums; font-size:1.1rem; color:var(--ink);
+}
+.pay-chip.pool{border-color:var(--tee);}
+.pay-chip.place .pay-amount{color:var(--fairway); font-size:1.2rem;}
+
+@media(max-width:1100px){
+  #tvBoard{padding:18px;}
+  .tv-holes{column-count:1;}
+}
+/* Fine-tune for the actual 1920x1080 cast: payouts run across the top,
+   matchups fill a 3-column grid, and spacing is compacted so a full 3x3
+   grid of holes (9 blocks) fits 1080 with no scrolling. */
+@media(min-width:1800px){
+  body.tv-mode{font-size:18px;}
+  #tvBoard{padding:14px 44px 18px; gap:10px;}
+  .tv-holes{column-count:3; column-gap:10px;}
+  #tvBoard .hole-block{margin-bottom:10px;}
+  #tvBoard .tv-col-title{font-size:.98rem; margin-bottom:7px; padding-bottom:4px;}
+  #tvBoard .results-meta{font-size:.82rem; margin:0 0 7px;}
+  #tvBoard .hole-head{padding:5px 12px;}
+  #tvBoard .hole-num{font-size:1.05rem;}
+  #tvBoard .hole-par{font-size:.66rem;}
+  #tvBoard .team-row{padding:5px 12px; gap:8px;}
+  #tvBoard .pname{font-size:.98rem;}
+  #tvBoard .score-value{min-width:60px; font-size:1.1rem; padding:1px 3px;}
+  #tvBoard .score-btn{padding:5px 10px; font-size:.7rem;}
+  .tv-paytop{gap:8px;}
+  .pay-chip{padding:6px 14px;}
+  .pay-chip .pay-amount{font-size:1.05rem;}
+  .pay-chip.place .pay-amount{font-size:1.15rem;}
+  .tv-sponsors{margin-top:4px;}
+  .sponsor-card{padding:7px 16px; flex:1 1 150px; max-width:240px;}
+  .sponsor-name{font-size:1.02rem;}
+  .sponsor-tag{font-size:.66rem; margin-top:2px;}
+  .tv-sponsors .tv-col-title{margin-bottom:6px;}
+}
+
+/* ---------- Dashboard sponsor strip ---------- */
+.tv-sponsors{grid-column:1 / -1; margin-top:6px;}
+.sponsor-row{display:flex; flex-wrap:wrap; gap:14px; justify-content:center;}
+.sponsor-card{
+  border:1px solid var(--tee-soft); background:var(--card); border-radius:9px;
+  padding:13px 20px; text-align:center; flex:1 1 190px; max-width:280px;
+  box-shadow:var(--shadow);
+}
+.sponsor-name{font-family:Georgia,serif; font-size:1.08rem; letter-spacing:.03em;}
+.sponsor-tag{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-top:4px;}
+@media(min-width:1800px){
+  .sponsor-name{font-size:1.25rem;}
+  .sponsor-tag{font-size:.8rem;}
+}
+
+/* ---------- Print: just the masthead + scorecard ---------- */
+@media print{
+  body{background:#fff; color:#000; padding:0;}
+  .no-print, .score-btn, .save-week-wrap, #toastWrap{display:none !important;}
+  .card{border:none; box-shadow:none; padding:0;}
+  .masthead{background:#fff; color:#000; border-bottom:3px double #000;}
+  .masthead .sub{color:#333;}
+  .hole-block{break-inside:avoid; border-color:#999;}
+  .hole-head{background:#eee; color:#000;}
+  .leader-line{border-color:#999;}
+  .score-value{border-color:#999; color:#000;}
+  .score-value.leader{color:#000;}
+}
+
+@media(max-width:520px){
+  .t-night{font-size:1.35rem;}
+  .club-logo{width:72px; height:72px;}
+  .roster-grid{grid-template-columns:repeat(auto-fill,minmax(136px,1fr));}
+  .team-row{flex-wrap:wrap;}
+  .leader-line{display:none;}
+  .score-cell{margin-left:auto;}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <img class="club-logo" id="clubLogo" alt="Morrilton Country Club — Est. 1922" src="data:image/png;base64,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">
+  <h1>
+    <span class="t-club">MCC — MGA</span>
+    <span class="t-night">Wednesday Night</span>
+    <span class="t-scramble">Scramble</span>
+  </h1>
+  <p class="sub" id="todayDate"></p>
+  <p class="sub tagline">Pairings · Payouts · Season Standings</p>
+</header>
+
+<main>
+
+  <!-- ============ ROSTER & ATTENDEES ============ -->
+  <details class="card no-print" open>
+    <summary>Roster &amp; Check-In</summary>
+
+    <label for="playerBox">Find or add a player</label>
+    <input type="search" id="playerBox" placeholder="Type a name — matches filter below, new names can be added" autocomplete="off">
+
+    <div class="row" style="margin-top:10px; justify-content:space-between;">
+      <span class="count-badge" id="countBadge">0 players · 0 attending</span>
+    </div>
+    <div class="btn-group" style="margin-top:8px;">
+      <button class="btn ghost" id="selectAllBtn">Select all</button>
+      <button class="btn ghost" id="selectNoneBtn">Select none</button>
+      <button class="btn danger" id="removeAllBtn" disabled>Remove all players</button>
+    </div>
+    <p class="small-note">Check-in flow: type a few letters, then tap the name (or press Enter on a single match) — they're marked attending and the box clears for the next name. Unknown names get an "Add" option and join as attending. With the box empty, tapping a chip toggles it, so tap a green name to unselect. The ✕ removes a player from the roster.</p>
+
+    <div id="addRow"></div>
+    <div class="roster-grid" id="playerGrid"></div>
+  </details>
+
+  <!-- ============ COURSE SETUP ============ -->
+  <details class="card no-print">
+    <summary>Course Setup — Holes in Play</summary>
+    <p class="small-note" style="margin-top:0;">Tap a hole number to put it in or out of play for team tees (green = in play). Tap the par label to cycle it 3 → 4 → 5. Par 3s can be used too — just switch them on. The setup is saved in your season file.</p>
+    <div class="hole-grid" id="holeGrid"></div>
+    <p class="preview-line" id="holesSummary" style="margin-top:10px;"></p>
+  </details>
+
+  <!-- ============ GENERATE ============ -->
+  <details class="card no-print" open>
+    <summary>Make the Pairings</summary>
+    <div class="btn-group" style="margin-top:0;">
+      <button class="btn" id="genBalancedBtn">⚖️ Generate — fresh partners</button>
+      <button class="btn secondary" id="genScoredBtn">🎯 Generate — score-balanced</button>
+      <button class="btn secondary" id="genRandomBtn">🎲 Generate — fully random</button>
+    </div>
+    <p class="preview-line" id="previewLine"></p>
+    <p class="small-note">Everyone gets one partner for the whole round; no one appears on two holes. Only holes switched on in Course Setup are used for team tees. Each hole takes 2 teams; bigger groups add a 3rd team spread across as many holes as needed (max 3 per hole). An odd player plays their own ball and is placed on a 3-team hole whenever one exists. "Fresh partners" only avoids repeating last week’s pairings — after a week apart, two players can be drawn together again. "Score-balanced" pairs last week’s low rounds with high rounds (season average as fallback) so teams start out even — the bottom-half partner is drawn randomly, still steering around repeats.</p>
+  </details>
+
+  <!-- ============ SCORECARD / RESULTS ============ -->
+  <section class="card" id="resultsCard">
+    <h2 class="eyebrow">This Week's Card</h2>
+    <div id="resultsArea"><p class="empty-msg">No pairings yet — pick attendees above and hit Generate.</p></div>
+  </section>
+
+  <!-- ============ PAYOUTS ============ -->
+  <section class="card" id="payoutCard">
+    <h2 class="eyebrow">Payouts</h2>
+    <div class="row payout-inputs no-print">
+      <div style="flex:0 1 220px;">
+        <label for="payoutBuyin">Buy-in per player ($)</label>
+        <input type="number" id="payoutBuyin" min="0" step="1" value="7" inputmode="decimal">
+      </div>
+    </div>
+    <div id="payoutBreakdown"></div>
+    <p class="small-note no-print">Player count comes straight from check-in — everyone marked attending is assumed to have paid (collected manually). MGA money comes off the top: $2 × players. Under 30 players pays 2 places (60/40); over 30 pays 3 places (50/30/20).</p>
+  </section>
+
+  <!-- ============ SPONSORS ============ -->
+  <details class="card no-print">
+    <summary>Sponsors</summary>
+    <label for="sponsorsBox">Sponsors shown on the dashboard (one per line — use "Name | tagline" for an optional second line)</label>
+    <textarea id="sponsorsBox" rows="4" placeholder="Smith's Hardware | Proud MGA supporter&#10;River Valley Bank&#10;Joe's BBQ | Post-round plates half off Wednesdays"></textarea>
+    <p class="small-note">These appear in a sponsor strip along the bottom of the dashboard, and they're saved in your season file.</p>
+  </details>
+
+  <!-- ============ SEASON: STANDINGS + WEEKLY HISTORY ============ -->
+  <details class="card no-print" id="seasonCard">
+    <summary>Season — Standings &amp; Weekly History</summary>
+
+    <div id="standingsArea"></div>
+
+    <div class="btn-group">
+      <button class="btn ghost" id="exportHistoryCsvBtn">Export history CSV</button>
+      <button class="btn danger" id="clearHistoryBtn">Clear history</button>
+    </div>
+    <p class="small-note">Every card you save lands here. Standings count a "win" as being on the lowest round of the week. Pairing avoidance looks only at the most recent saved week — last week’s partners are kept apart, everyone else is fair game.</p>
+
+    <div id="historyArea" style="margin-top:12px;"><p class="empty-msg">No weeks saved yet — save a card after the round to start the season log.</p></div>
+  </details>
+
+  <!-- ============ SAVE / LOAD ============ -->
+  <details class="card no-print">
+    <summary>Save &amp; Load</summary>
+    <div class="btn-group" style="margin-top:0;">
+      <button class="btn" id="saveSeasonBtn">💾 Save season file</button>
+      <button class="btn secondary" id="loadSeasonBtn">📂 Load season file</button>
+    </div>
+    <p class="small-note">The app auto-saves everything on this device as you go — roster, check-ins, course setup, sponsors, weekly history, even the current card and scores — and restores it the next time you open the file in the same browser. The season file (JSON) is your backup and your way to move to another device; older history-only JSON files load fine too.</p>
+    <div class="btn-group">
+      <button class="btn danger" id="clearDeviceBtn">🗑 Clear saved data on this device</button>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn ghost" id="exportRosterBtn">Export roster CSV</button>
+      <button class="btn ghost" id="importRosterBtn">Import roster CSV</button>
+    </div>
+    <p class="small-note">Roster CSV is one name per line — handy for bulk-adding the league.</p>
+    <input type="file" id="fileLoadSeason" accept=".json,application/json" hidden>
+    <input type="file" id="fileImportRoster" accept=".csv,text/csv,text/plain" hidden>
+  </details>
+
+</main>
+
+<div id="floatBtns" class="no-print">
+  <button type="button" id="fsToggle" title="Toggle browser fullscreen">⛶ Fullscreen</button>
+  <button type="button" id="tvToggle">📺 Dashboard</button>
+</div>
+
+<div id="tvBoard" class="no-print" hidden></div>
+
+<div id="toastWrap" aria-live="polite"></div>
+
+<script>
+/* =========================================================================
+   MCC — MGA WEDNESDAY NIGHT SCRAMBLE — single-file picker
+   ---------------------------------------------------------------------
+   Session-based (no browser storage). Use "Save season file" to persist.
+   Edit STARTER_NAMES and PARS below to customize.
+   ========================================================================= */
+
+'use strict';
+
+/* ---------------- Course setup ---------------- */
+// All 18 holes, each with an adjustable par and an in-play toggle.
+// Default matches the league's back nine: 11 & 13-18 in play, par 3s (10,12) off.
+// Front-nine pars are editable defaults — tap a par label in Course Setup to change it.
+const DEFAULT_HOLES = [
+  {hole:1,  par:4, active:false}, {hole:2,  par:4, active:false}, {hole:3,  par:3, active:false},
+  {hole:4,  par:4, active:false}, {hole:5,  par:5, active:false}, {hole:6,  par:4, active:false},
+  {hole:7,  par:3, active:false}, {hole:8,  par:4, active:false}, {hole:9,  par:5, active:false},
+  {hole:10, par:3, active:false}, {hole:11, par:4, active:true},  {hole:12, par:3, active:false},
+  {hole:13, par:4, active:true},  {hole:14, par:4, active:true},  {hole:15, par:4, active:true},
+  {hole:16, par:4, active:true},  {hole:17, par:5, active:true},  {hole:18, par:5, active:true}
+];
+let holeConfig = DEFAULT_HOLES.map(h => ({...h}));
+
+function activeHoles(){ return holeConfig.filter(h => h.active); }
+function maxTeams(){ return activeHoles().length * 3; }   // up to 3 teams per hole when the group is big
+
+/* ---------------- Starter roster ---------------- */
+const STARTER_NAMES = [
+  "Aaron Dunlap","Adam Chadek","Alex Hill","Andy Jackson","Andy Roller",
+  "Bradley Bloomfield","Jack Lyon","Jon Chadek","Jonathan Blaylock","Jonathan Higgins",
+  "Jordan Ogle","Josh McCoy","Kyle Beck","Matt Nuckols","Matt Zimmerman",
+  "Mike Massey","Nick Naylor","Paul Zimmerman","Phil Blaylock","Randy Lawrence",
+  "Roger Hayes","Scott Smart","Seth Davidson","Steve Adair","Steve Whorton",
+  "Tony Kirby","Dennis Merritt","Asher Hogan","Brick","Chris Stegall",
+  "Cody Gibson","Darrell","Gary Cook","Jason McGinty","Josh Rittman",
+  "Luke Beck","Maddox Hogan","PW Carolan","Ryan Beck","Marcel Lemmer"
+];
+
+/* ---------------- App state (in-memory) ---------------- */
+let players = [];             // [{id, name}]
+let attendeeIds = new Set();
+let weeklyHistory = [];       // saved weeks (v2 entries, newest first)
+let pairHistory = {};         // DERIVED from weeklyHistory; key = names, value = count
+let lastResults = [];         // current card: [{hole, par, teams:[{players:[{id,name}], solo, score}]}]
+let lastOverflow = false;
+let lastRepeatInfo = null;    // {repeats, total}
+let weekLabelValue = '';
+let weekNotesValue = '';
+let swapMode = false;
+let swapPick = null;          // {h, t, p} indexes into lastResults
+let sponsorsText = '';        // raw sponsor lines; parsed for the dashboard strip
+let nextId = 1;
+let nextHistoryId = 1;
+
+/* ---------------- Tiny helpers ---------------- */
+const $ = id => document.getElementById(id);
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function toast(msg){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  $('toastWrap').appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+function formatScore(n){                    // 0 -> Even, else +N / -N
+  if(n === 0) return 'Even';
+  return n > 0 ? `+${n}` : `${n}`;
+}
+function parseScoreNum(s){                  // "Even"/"+6"/"-4" -> number (or null)
+  if(typeof s === 'number') return s;
+  if(!s) return null;
+  const str = String(s).trim().toLowerCase();
+  if(str === 'even' || str === 'e') return 0;
+  const n = parseInt(str, 10);
+  return isNaN(n) ? null : n;
+}
+function fmtAvg(v){                         // signed 1-dp average, "E" for even
+  if(v === 0) return 'E';
+  const s = (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+  return v > 0 ? `+${s}` : s;
+}
+
+async function copyText(text){              // clipboard with file:// fallback
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(_){}
+    ta.remove();
+    return ok;
+  }
+}
+
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type: mime || 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   PARTNER HISTORY — derived entirely from SAVED weeks, keyed by player
+   NAMES so it survives export/import across sessions. Re-rolling a card
+   without saving never pollutes it.
+   ========================================================================= */
+function pairKeyNames(a, b){
+  return [a, b].map(s => s.trim().toLowerCase()).sort().join('||');
+}
+function histCountNames(a, b){
+  return pairHistory[pairKeyNames(a, b)] || 0;
+}
+function rebuildPairHistory(){
+  // Only LAST week's pairings are blocked. After a week apart, two players
+  // can be drawn together again. (weeklyHistory is newest-first.)
+  pairHistory = {};
+  const lastWeek = weeklyHistory[0];
+  if(!lastWeek) return;
+  (lastWeek.holes || []).forEach(h => {
+    (h.teams || []).forEach(t => {
+      if(t.players && t.players.length === 2){
+        const k = pairKeyNames(t.players[0], t.players[1]);
+        pairHistory[k] = (pairHistory[k] || 0) + 1;
+      }
+    });
+  });
+}
+
+/* =========================================================================
+   TEAM FORMATION — one fixed partner per player for the whole round.
+   Balanced mode runs many shuffled greedy attempts and keeps the pairing
+   with the fewest repeat partnerships from saved weeks.
+   ========================================================================= */
+function greedyPair(pool){
+  const teams = [];
+  const p = pool.slice();
+  while(p.length >= 2){
+    const p1 = p.shift();
+    let bestIdx = 0, bestScore = Infinity;
+    p.forEach((cand, i) => {
+      const s = histCountNames(p1.name, cand.name);
+      if(s < bestScore){ bestScore = s; bestIdx = i; }
+    });
+    const p2 = p.splice(bestIdx, 1)[0];
+    teams.push({type:'pair', players:[p1, p2], score:0});
+  }
+  if(p.length === 1) teams.push({type:'solo', players:[p[0]], score:0});
+  return teams;
+}
+
+function scorePairing(teams){   // [repeatPairCount, totalPastMeetings]
+  let repeats = 0, total = 0;
+  teams.forEach(t => {
+    if(t.players.length === 2){
+      const c = histCountNames(t.players[0].name, t.players[1].name);
+      if(c > 0) repeats++;
+      total += c;
+    }
+  });
+  return [repeats, total];
+}
+
+/* Rating for score-balanced pairing: last week's round if they played,
+   else their season average, else null (treated as mid-pack). Lower = better. */
+function playerRating(name){
+  const key = name.trim().toLowerCase();
+  const findIn = entry => {
+    let r = null;
+    (entry.holes || []).forEach(h => (h.teams || []).forEach(t => {
+      if(t.players && t.players.some(pn => String(pn).trim().toLowerCase() === key)
+         && typeof t.scoreNum === 'number' && !isNaN(t.scoreNum)) r = t.scoreNum;
+    }));
+    return r;
+  };
+  if(weeklyHistory.length){
+    const last = findIn(weeklyHistory[0]);          // most recent saved week
+    if(last !== null) return last;
+  }
+  let total = 0, rounds = 0;
+  weeklyHistory.forEach(e => {
+    const r = findIn(e);
+    if(r !== null){ total += r; rounds++; }
+  });
+  return rounds ? total / rounds : null;
+}
+
+function formTeams(attendees, mode){
+  if(mode === 'scored'){
+    // Rank by rating; unknowns slot in at the median. Odd count: the
+    // mid-pack player takes their own ball (rides on the 3-team hole).
+    const rated = attendees.map(p => ({p, r: playerRating(p.name)}));
+    const known = rated.filter(x => x.r !== null).map(x => x.r).sort((a, b) => a - b);
+    const median = known.length ? known[Math.floor(known.length / 2)] : 0;
+    rated.forEach(x => { if(x.r === null) x.r = median; });
+    const arr = shuffle(rated).sort((a, b) => a.r - b.r);   // shuffle first so ties order randomly
+
+    let soloTeam = null;
+    if(arr.length % 2 === 1){
+      soloTeam = {type:'solo', players:[arr.splice(Math.floor(arr.length / 2), 1)[0].p], score:0};
+    }
+    const half = arr.length / 2;
+    const top = arr.slice(0, half).map(x => x.p);
+    const bottomBase = arr.slice(half).map(x => x.p);
+
+    // Random top↔bottom matching, retried to steer around repeat partners
+    let best = null, bestKey = [Infinity, Infinity];
+    for(let i = 0; i < 40; i++){
+      const bottom = shuffle(bottomBase);
+      const attempt = top.map((tp, j) => ({type:'pair', players:[tp, bottom[j]], score:0}));
+      const key = scorePairing(attempt);
+      if(key[0] < bestKey[0] || (key[0] === bestKey[0] && key[1] < bestKey[1])){
+        best = attempt; bestKey = key;
+        if(bestKey[0] === 0 && bestKey[1] === 0) break;
+      }
+    }
+    const teams = best || [];
+    if(soloTeam) teams.push(soloTeam);
+    return teams;
+  }
+  if(mode === 'random'){
+    const pool = shuffle(attendees);
+    const teams = [];
+    while(pool.length >= 2){
+      teams.push({type:'pair', players:[pool.shift(), pool.shift()], score:0});
+    }
+    if(pool.length === 1) teams.push({type:'solo', players:[pool[0]], score:0});
+    return teams;
+  }
+  // balanced: 40 restarts, keep the least-repetitive pairing
+  let best = null, bestKey = [Infinity, Infinity];
+  for(let i = 0; i < 40; i++){
+    const attempt = greedyPair(shuffle(attendees));
+    const key = scorePairing(attempt);
+    if(key[0] < bestKey[0] || (key[0] === bestKey[0] && key[1] < bestKey[1])){
+      best = attempt; bestKey = key;
+      if(bestKey[0] === 0 && bestKey[1] === 0) break;   // perfect — all-new pairs
+    }
+  }
+  return best;
+}
+
+/* =========================================================================
+   HOLE ASSIGNMENT — only holes switched on in Course Setup are used.
+   Preference order: 2 teams per hole. If the group outgrows that, 3rd
+   teams are SPREAD across multiple holes (never all piled on one) up to
+   3 per hole. Only past 3× the hole count does true overflow occur.
+   ========================================================================= */
+function assignTeamsToHoles(teams){
+  const holesArr = activeHoles().map(h => ({hole:h.hole, par:h.par, teams:[]}));
+  if(holesArr.length === 0) return null;
+  const order = shuffle(teams);
+  const T = order.length;
+  const H = holesArr.length;
+  let overflow = false;
+
+  // Decide how many teams each hole gets
+  const counts = new Array(H).fill(0);
+  if(T <= 2 * H){
+    // Comfortable: 2 per hole, an odd team rides as a 3rd on the last filled hole
+    const fullPairs = Math.floor(T / 2);
+    for(let i = 0; i < fullPairs; i++) counts[i] = 2;
+    if(T % 2 === 1) counts[Math.max(0, fullPairs - 1)] += 1;
+  } else {
+    // Big night: every hole gets 2, then 3rd teams spread across holes
+    counts.fill(2);
+    let extra = T - 2 * H;
+    const triples = Math.min(extra, H);
+    for(let i = 0; i < triples; i++) counts[H - 1 - i] += 1;  // add 3rds from the back
+    extra -= triples;
+    if(extra > 0){          // beyond 3 per hole — genuinely over capacity
+      counts[H - 1] += extra;
+      overflow = true;
+    }
+  }
+
+  let idx = 0;
+  // Own-ball rule: if there's a solo player and some hole is taking 3 teams,
+  // the solo rides on that 3-team hole (never left as a lone extra elsewhere).
+  let solo = null, soloPlaced = false;
+  if(counts.some(c => c >= 3)){
+    const si = order.findIndex(t => t.type === 'solo');
+    if(si !== -1) solo = order.splice(si, 1)[0];
+  }
+  counts.forEach((c, i) => {
+    const giveSolo = solo && !soloPlaced && c >= 3;
+    const take = giveSolo ? c - 1 : c;
+    for(let k = 0; k < take; k++) holesArr[i].teams.push(order[idx++]);
+    if(giveSolo){
+      holesArr[i].teams.push(solo);   // listed last on its hole
+      soloPlaced = true;
+    }
+  });
+  return {holesArr: holesArr.filter(h => h.teams.length > 0), overflow};
+}
+
+/* ---------------- Generate ---------------- */
+function generateSchedule(mode){
+  const attendees = players.filter(p => attendeeIds.has(p.id));
+  if(attendees.length < 2){
+    toast('Select at least 2 attendees first.');
+    return;
+  }
+  if(activeHoles().length === 0){
+    toast('Switch on at least one hole in Course Setup first.');
+    return;
+  }
+  const teams = formTeams(attendees, mode);
+  const [repeats] = scorePairing(teams);
+  lastRepeatInfo = {repeats, total: teams.filter(t => t.players.length === 2).length};
+
+  const {holesArr, overflow} = assignTeamsToHoles(teams);
+  lastResults = holesArr;
+  lastOverflow = overflow;
+  swapMode = false; swapPick = null;
+  if(!weekLabelValue) weekLabelValue = defaultWeekLabel();
+  renderResults();
+  $('resultsCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function defaultWeekLabel(){
+  return 'Week of ' + new Date().toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+}
+
+/* =========================================================================
+   RENDER: THE SCORECARD
+   ========================================================================= */
+function teamNamesLabel(t){
+  return t.players.map(p => p.name).join(' / ') + (t.type === 'solo' ? ' (own ball)' : '');
+}
+
+function currentLeaderScore(){
+  // lowest score across all teams — only meaningful once scores diverge
+  const scores = [];
+  lastResults.forEach(h => h.teams.forEach(t => scores.push(t.score)));
+  if(scores.length === 0) return null;
+  const min = Math.min(...scores), max = Math.max(...scores);
+  return (min === max) ? null : min;
+}
+
+function renderResults(){
+  const area = $('resultsArea');
+  area.innerHTML = '';
+  if(lastResults.length === 0){
+    area.innerHTML = '<p class="empty-msg">No pairings yet — pick attendees above and hit Generate.</p>';
+    return;
+  }
+
+  // Meta line: repeats info + leader legend
+  const meta = document.createElement('p');
+  meta.className = 'results-meta';
+  let metaText = '';
+  if(lastRepeatInfo){
+    metaText = lastRepeatInfo.repeats === 0
+      ? `All ${lastRepeatInfo.total} pairings differ from last week.`
+      : `${lastRepeatInfo.repeats} of ${lastRepeatInfo.total} pairings repeat last week (unavoidable with this group).`;
+  }
+  const leaderScore = currentLeaderScore();
+  meta.textContent = metaText;
+  if(leaderScore !== null){
+    const flag = document.createElement('span');
+    flag.className = 'flag-mark'; flag.textContent = '⚑';
+    meta.appendChild(document.createTextNode('  '));
+    meta.appendChild(flag);
+    meta.appendChild(document.createTextNode('low round'));
+  }
+  area.appendChild(meta);
+
+  if(lastOverflow){
+    const lastHole = lastResults.length ? lastResults[lastResults.length - 1].hole : '?';
+    const warn = document.createElement('p');
+    warn.className = 'warn-note';
+    warn.textContent = `⚠ More than ${maxTeams()} teams — extras were stacked on hole ${lastHole}. Add holes in Course Setup or run a second wave.`;
+    area.appendChild(warn);
+  }
+
+  // Hole blocks
+  lastResults.forEach((h, hIdx) => {
+    const block = document.createElement('div');
+    block.className = 'hole-block';
+
+    const head = document.createElement('div');
+    head.className = 'hole-head';
+    const num = document.createElement('span');
+    num.className = 'hole-num';
+    num.textContent = `Hole ${h.hole}`;
+    const par = document.createElement('span');
+    par.className = 'hole-par';
+    par.textContent = `Par ${h.par}`;
+    head.appendChild(num); head.appendChild(par);
+    block.appendChild(head);
+
+    h.teams.forEach((t, tIdx) => {
+      const row = document.createElement('div');
+      row.className = 'team-row';
+
+      // Names (individually tappable in adjust mode)
+      const names = document.createElement('div');
+      names.className = 'team-names';
+      t.players.forEach((p, pIdx) => {
+        if(pIdx > 0){
+          const j = document.createElement('span');
+          j.className = 'pjoin'; j.textContent = '/';
+          names.appendChild(j);
+        }
+        const span = document.createElement('span');
+        span.className = 'pname' + (swapMode ? ' swappable' : '');
+        if(swapMode && swapPick && swapPick.h === hIdx && swapPick.t === tIdx && swapPick.p === pIdx){
+          span.classList.add('swap-picked');
+        }
+        span.textContent = p.name;
+        if(swapMode){
+          span.setAttribute('role', 'button');
+          span.tabIndex = 0;
+          const pick = () => onSwapPick(hIdx, tIdx, pIdx);
+          span.addEventListener('click', pick);
+          span.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pick(); } });
+        }
+        names.appendChild(span);
+      });
+      if(t.type === 'solo'){
+        const ob = document.createElement('span');
+        ob.className = 'own-ball'; ob.textContent = 'own ball';
+        names.appendChild(ob);
+      }
+      row.appendChild(names);
+
+      // Dotted leader line to the score cell
+      const leader = document.createElement('div');
+      leader.className = 'leader-line';
+      row.appendChild(leader);
+
+      // Score: Down / value / Up (starts Even)
+      const cell = document.createElement('div');
+      cell.className = 'score-cell';
+      const down = document.createElement('button');
+      down.type = 'button'; down.className = 'score-btn'; down.textContent = 'Down';
+      down.setAttribute('aria-label', `Score down for ${teamNamesLabel(t)}`);
+      const val = document.createElement('span');
+      val.className = 'score-value';
+      if(leaderScore !== null && t.score === leaderScore){
+        val.classList.add('leader');
+        const flag = document.createElement('span');
+        flag.className = 'flag-mark'; flag.textContent = '⚑';
+        val.appendChild(flag);
+      }
+      val.appendChild(document.createTextNode(formatScore(t.score)));
+      const up = document.createElement('button');
+      up.type = 'button'; up.className = 'score-btn'; up.textContent = 'Up';
+      up.setAttribute('aria-label', `Score up for ${teamNamesLabel(t)}`);
+      down.addEventListener('click', () => { t.score -= 1; renderResults(); });
+      up.addEventListener('click', () => { t.score += 1; renderResults(); });
+      cell.appendChild(down); cell.appendChild(val); cell.appendChild(up);
+      row.appendChild(cell);
+
+      block.appendChild(row);
+    });
+
+    area.appendChild(block);
+  });
+
+  // Card actions
+  const actions = document.createElement('div');
+  actions.className = 'btn-group no-print';
+  const mkBtn = (label, cls, fn) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn ' + cls; b.textContent = label;
+    b.addEventListener('click', fn);
+    actions.appendChild(b);
+    return b;
+  };
+  mkBtn(swapMode ? '✓ Done adjusting' : '🔀 Adjust teams', swapMode ? '' : 'secondary', toggleSwapMode);
+  mkBtn('📋 Copy card', 'ghost', copyResults);
+  mkBtn('🖨 Print card', 'ghost', () => window.print());
+  mkBtn('CSV', 'ghost', () => exportResults('csv'));
+  mkBtn('TXT', 'ghost', () => exportResults('txt'));
+  mkBtn('Reset scores', 'ghost', resetScores);
+  area.appendChild(actions);
+
+  if(swapMode){
+    const hint = document.createElement('p');
+    hint.className = 'small-note no-print';
+    hint.textContent = 'Tap one player, then tap another to swap them between teams. Scores stay with the team slot.';
+    area.appendChild(hint);
+  }
+
+  // Save-this-week form (values live in state, so they survive re-renders)
+  const wrap = document.createElement('div');
+  wrap.className = 'save-week-wrap no-print';
+  const lab1 = document.createElement('label');
+  lab1.htmlFor = 'weekLabel'; lab1.textContent = 'Week label';
+  const in1 = document.createElement('input');
+  in1.type = 'text'; in1.id = 'weekLabel'; in1.value = weekLabelValue;
+  in1.placeholder = 'e.g. Week of July 14, 2026';
+  in1.addEventListener('input', () => { weekLabelValue = in1.value; schedulePersist(); });
+  const lab2 = document.createElement('label');
+  lab2.htmlFor = 'weekNotes'; lab2.style.marginTop = '10px'; lab2.textContent = 'Notes (optional)';
+  const in2 = document.createElement('input');
+  in2.type = 'text'; in2.id = 'weekNotes'; in2.value = weekNotesValue;
+  in2.placeholder = 'e.g. Cart-path only, windy back stretch';
+  in2.addEventListener('input', () => { weekNotesValue = in2.value; schedulePersist(); });
+  const saveRow = document.createElement('div');
+  saveRow.className = 'btn-group';
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button'; saveBtn.className = 'btn'; saveBtn.textContent = "💾 Save this week's card";
+  saveBtn.addEventListener('click', saveWeekToHistory);
+  saveRow.appendChild(saveBtn);
+  wrap.appendChild(lab1); wrap.appendChild(in1);
+  wrap.appendChild(lab2); wrap.appendChild(in2);
+  wrap.appendChild(saveRow);
+  area.appendChild(wrap);
+  syncTV();
+  schedulePersist();
+}
+
+function resetScores(){
+  lastResults.forEach(h => h.teams.forEach(t => { t.score = 0; }));
+  renderResults();
+  toast('Scores reset to Even.');
+}
+
+/* ---------------- Adjust (swap) mode ---------------- */
+function toggleSwapMode(){
+  swapMode = !swapMode;
+  swapPick = null;
+  renderResults();
+}
+function onSwapPick(h, t, p){
+  if(!swapPick){
+    swapPick = {h, t, p};
+    renderResults();
+    return;
+  }
+  if(swapPick.h === h && swapPick.t === t && swapPick.p === p){
+    swapPick = null;               // tapped the same player: deselect
+    renderResults();
+    return;
+  }
+  const a = lastResults[swapPick.h].teams[swapPick.t];
+  const b = lastResults[h].teams[t];
+  const tmp = a.players[swapPick.p];
+  a.players[swapPick.p] = b.players[p];
+  b.players[p] = tmp;
+  swapPick = null;
+  renderResults();
+  toast('Players swapped.');
+}
+
+/* =========================================================================
+   SAVE WEEK → HISTORY (v2 entry). Partner history rebuilds from saved
+   weeks, so Balanced mode stays accurate across sessions via the season file.
+   ========================================================================= */
+function saveWeekToHistory(){
+  if(lastResults.length === 0){
+    toast('Generate a card first.');
+    return;
+  }
+  const attendeeNames = players.filter(p => attendeeIds.has(p.id)).map(p => p.name);
+  const entry = {
+    id: nextHistoryId++,
+    label: (weekLabelValue || '').trim() || `Week ${weeklyHistory.length + 1}`,
+    savedAt: new Date().toISOString(),
+    attendees: attendeeNames,
+    notes: (weekNotesValue || '').trim(),
+    holes: lastResults.map(h => ({
+      hole: h.hole,
+      par: h.par,
+      teams: h.teams.map(t => ({
+        players: t.players.map(p => p.name),
+        solo: t.type === 'solo',
+        score: formatScore(t.score),
+        scoreNum: t.score
+      }))
+    }))
+  };
+  weeklyHistory.unshift(entry);
+  rebuildPairHistory();
+  renderHistory();
+  $('seasonCard').open = true;
+  toast(`Saved "${entry.label}".`);
+}
+
+/* ---------------- Normalize older entry formats ---------------- */
+function normalizeHistoryEntry(entry){
+  entry.notes = entry.notes || entry.score || '';
+  entry.attendees = entry.attendees || [];
+  entry.holes = (entry.holes || []).map(h => ({
+    hole: h.hole,
+    par: h.par,
+    teams: (h.teams || []).map(t => {
+      if(typeof t === 'string'){                      // v1: "A / B" or "A (own ball)"
+        const solo = /\(own ball\)/.test(t);
+        const clean = t.replace(/\s*\(own ball\)\s*/, '').trim();
+        const names = clean.split(' / ').map(s => s.trim()).filter(Boolean);
+        return {players:names, solo, score:'', scoreNum:null};
+      }
+      if(t.players){                                  // v2 already
+        if(t.scoreNum === undefined) t.scoreNum = parseScoreNum(t.score);
+        return t;
+      }
+      // v1.5: {label, score}
+      const solo = /\(own ball\)/.test(t.label || '');
+      const clean = (t.label || '').replace(/\s*\(own ball\)\s*/, '').trim();
+      const names = clean.split(' / ').map(s => s.trim()).filter(Boolean);
+      return {players:names, solo, score:t.score || '', scoreNum:parseScoreNum(t.score)};
+    })
+  }));
+  return entry;
+}
+
+/* ---------------- History + Standings ---------------- */
+function deleteHistoryEntry(id){
+  weeklyHistory = weeklyHistory.filter(e => e.id !== id);
+  rebuildPairHistory();
+  renderHistory();
+  toast('Week removed from history.');
+}
+
+function clearHistory(){
+  if(weeklyHistory.length === 0){ toast('History is already empty.'); return; }
+  if(!confirm('Clear all saved weeks for this session? Save a season file first if you want to keep them.')) return;
+  weeklyHistory = [];
+  rebuildPairHistory();
+  renderHistory();
+  toast('History cleared.');
+}
+
+function computeStandings(){
+  const stats = {};   // name -> {name, played, wins, rounds, total, best}
+  weeklyHistory.forEach(entry => {
+    const weekScores = [];
+    entry.holes.forEach(h => h.teams.forEach(t => {
+      if(typeof t.scoreNum === 'number' && !isNaN(t.scoreNum)) weekScores.push(t.scoreNum);
+    }));
+    const weekMin = weekScores.length ? Math.min(...weekScores) : null;
+    entry.holes.forEach(h => h.teams.forEach(t => {
+      (t.players || []).forEach(name => {
+        if(!stats[name]) stats[name] = {name, played:0, wins:0, rounds:0, total:0, best:null};
+        const s = stats[name];
+        s.played++;
+        if(typeof t.scoreNum === 'number' && !isNaN(t.scoreNum)){
+          s.rounds++;
+          s.total += t.scoreNum;
+          if(s.best === null || t.scoreNum < s.best) s.best = t.scoreNum;
+          if(weekMin !== null && t.scoreNum === weekMin) s.wins++;
+        }
+      });
+    }));
+  });
+  const avg = s => s.rounds ? s.total / s.rounds : Infinity;
+  return Object.values(stats).sort((a, b) =>
+    b.wins - a.wins || avg(a) - avg(b) || a.name.localeCompare(b.name));
+}
+
+function renderHistory(){
+  // Standings
+  const sArea = $('standingsArea');
+  sArea.innerHTML = '';
+  const standings = computeStandings();
+  const hasScores = standings.some(s => s.rounds > 0);
+  if(standings.length && hasScores){
+    const eb = document.createElement('h3');
+    eb.className = 'eyebrow'; eb.textContent = 'Standings';
+    sArea.appendChild(eb);
+    const table = document.createElement('table');
+    table.className = 'standings';
+    table.innerHTML = '<thead><tr><th>Player</th><th class="num">Wks</th><th class="num">Wins</th><th class="num">Avg</th><th class="num">Best</th></tr></thead>';
+    const tb = document.createElement('tbody');
+    standings.forEach(s => {
+      const tr = document.createElement('tr');
+      const cells = [
+        s.name,
+        String(s.played),
+        String(s.wins),
+        s.rounds ? fmtAvg(s.total / s.rounds) : '—',
+        s.best === null ? '—' : formatScore(s.best)
+      ];
+      cells.forEach((c, i) => {
+        const td = document.createElement('td');
+        if(i > 0) td.className = 'num';
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+    sArea.appendChild(table);
+    const note = document.createElement('p');
+    note.className = 'small-note';
+    note.textContent = 'Ranked by wins, then average round. A win = being on the week\u2019s lowest round (ties share it).';
+    sArea.appendChild(note);
+  }
+
+  // Weekly entries
+  const area = $('historyArea');
+  area.innerHTML = '';
+  if(weeklyHistory.length === 0){
+    area.innerHTML = '<p class="empty-msg">No weeks saved yet — save a card after the round to start the season log.</p>';
+    return;
+  }
+  const eb2 = document.createElement('h3');
+  eb2.className = 'eyebrow'; eb2.textContent = 'Saved weeks';
+  area.appendChild(eb2);
+
+  weeklyHistory.forEach(entry => {
+    const det = document.createElement('details');
+    det.className = 'week-entry';
+
+    const sum = document.createElement('summary');
+    const lab = document.createElement('span');
+    lab.className = 'we-label'; lab.textContent = entry.label;
+    const date = document.createElement('span');
+    date.className = 'we-date';
+    date.textContent = new Date(entry.savedAt).toLocaleDateString();
+    sum.appendChild(lab); sum.appendChild(date);
+
+    // low-round chip in the summary if scores exist
+    let low = null, lowTeams = [];
+    entry.holes.forEach(h => h.teams.forEach(t => {
+      if(typeof t.scoreNum === 'number' && !isNaN(t.scoreNum)){
+        if(low === null || t.scoreNum < low){ low = t.scoreNum; lowTeams = [t]; }
+        else if(t.scoreNum === low){ lowTeams.push(t); }
+      }
+    }));
+    if(low !== null){
+      const chip = document.createElement('span');
+      chip.className = 'we-low';
+      chip.textContent = `⚑ ${formatScore(low)} — ${lowTeams.map(t => t.players.join(' / ')).join(', ')}`;
+      sum.appendChild(chip);
+    }
+    det.appendChild(sum);
+
+    const body = document.createElement('div');
+    body.className = 'we-body';
+    entry.holes.forEach(h => {
+      h.teams.forEach((t, i) => {
+        const line = document.createElement('div');
+        line.className = 'hline';
+        const b = document.createElement('b');
+        b.textContent = i === 0 ? `Hole ${h.hole}: ` : '\u2003\u2003\u2003 ';
+        line.appendChild(b);
+        let txt = t.players.join(' / ') + (t.solo ? ' (own ball)' : '');
+        if(t.score) txt += ` — ${t.score}`;
+        line.appendChild(document.createTextNode(txt));
+        body.appendChild(line);
+      });
+    });
+    const att = document.createElement('div');
+    att.className = 'we-attendees';
+    att.textContent = `${entry.attendees.length} attending: ${entry.attendees.join(', ')}`;
+    body.appendChild(att);
+    if(entry.notes){
+      const notes = document.createElement('div');
+      notes.className = 'we-notes';
+      notes.textContent = `Notes: ${entry.notes}`;
+      body.appendChild(notes);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'we-actions';
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'btn ghost'; del.textContent = 'Delete week';
+    del.addEventListener('click', () => {
+      if(confirm(`Delete "${entry.label}" from history?`)) deleteHistoryEntry(entry.id);
+    });
+    actions.appendChild(del);
+    body.appendChild(actions);
+
+    det.appendChild(body);
+    area.appendChild(det);
+  });
+  syncTV();
+  schedulePersist();
+}
+
+/* =========================================================================
+   ROSTER
+   ========================================================================= */
+function addPlayerByName(name){
+  name = (name || '').trim();
+  if(!name) return;
+  if(players.some(p => p.name.toLowerCase() === name.toLowerCase())){
+    toast('That name is already on the roster.');
+    return;
+  }
+  const p = {id: nextId++, name};
+  players.push(p);
+  attendeeIds.add(p.id);              // new arrivals are here — mark attending
+  $('playerBox').value = '';
+  renderPlayerGrid('');
+  toast(`Added ${name} — marked attending.`);
+}
+
+// Enter in the combined box: select a lone match, or add an unknown name.
+function onPlayerBoxEnter(){
+  const text = $('playerBox').value.trim();
+  if(!text) return;
+  const f = text.toLowerCase();
+  const matches = players.filter(p => p.name.toLowerCase().includes(f));
+  const exact = players.find(p => p.name.toLowerCase() === f);
+  if(matches.length === 1){
+    attendeeIds.add(matches[0].id);
+    $('playerBox').value = '';
+    renderPlayerGrid('');
+    toast(`${matches[0].name} marked attending.`);
+  } else if(!exact){
+    addPlayerByName(text);
+  }
+}
+
+function removePlayer(id){
+  const p = players.find(x => x.id === id);
+  players = players.filter(x => x.id !== id);
+  attendeeIds.delete(id);
+  renderPlayerGrid($('playerBox').value);
+  if(p) toast(`Removed ${p.name}.`);
+}
+
+function onRemoveAllPlayers(){
+  if(players.length === 0 || attendeeIds.size !== players.length) return;
+  if(!confirm(`Remove all ${players.length} players from the roster? This can't be undone (in this session).`)) return;
+  players = [];
+  attendeeIds.clear();
+  renderPlayerGrid($('playerBox').value);
+  toast('Roster cleared.');
+}
+
+function renderPlayerGrid(filter){
+  const grid = $('playerGrid');
+  const f = (filter || '').trim().toLowerCase();
+  const visible = players
+    .filter(p => p.name.toLowerCase().includes(f))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Inline add option: typed text that isn't an existing player
+  const addRow = $('addRow');
+  addRow.innerHTML = '';
+  const typed = (filter || '').trim();
+  if(typed && !players.some(p => p.name.toLowerCase() === f)){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'add-inline';
+    btn.textContent = `＋ Add "${typed}" to the roster (marks attending)`;
+    btn.addEventListener('click', () => addPlayerByName(typed));
+    addRow.appendChild(btn);
+  }
+
+  grid.innerHTML = '';
+  if(visible.length === 0 && !typed){
+    const msg = document.createElement('p');
+    msg.className = 'empty-msg';
+    msg.textContent = 'Roster is empty — type a name above to add your first player, or import a roster CSV.';
+    grid.appendChild(msg);
+  }
+  visible.forEach(p => {
+    const cell = document.createElement('div');
+    cell.className = 'roster-cell';
+
+    const btn = document.createElement('button');
+    const sel = attendeeIds.has(p.id);
+    btn.type = 'button';
+    btn.className = 'player-select' + (sel ? ' selected' : '');
+    btn.textContent = p.name;
+    btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
+    btn.addEventListener('click', () => {
+      const searching = $('playerBox').value.trim().length > 0;
+      if(searching){
+        // Check-in flow: picking from search results always marks attending,
+        // then clears the box for the next name.
+        attendeeIds.add(p.id);
+        $('playerBox').value = '';
+        renderPlayerGrid('');
+        toast(`${p.name} marked attending.`);
+      } else {
+        // Browsing the full grid: tap toggles, so green chips can be unselected.
+        if(attendeeIds.has(p.id)) attendeeIds.delete(p.id); else attendeeIds.add(p.id);
+        renderPlayerGrid('');
+      }
+    });
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'del-btn';
+    del.textContent = '✕';
+    del.title = `Remove ${p.name}`;
+    del.setAttribute('aria-label', `Remove ${p.name}`);
+    del.addEventListener('click', () => removePlayer(p.id));
+
+    cell.appendChild(btn);
+    cell.appendChild(del);
+    grid.appendChild(cell);
+  });
+  updateCountAndPreview();
+  schedulePersist();
+}
+
+function updateCountAndPreview(){
+  $('countBadge').textContent = `${players.length} players · ${attendeeIds.size} attending`;
+  $('removeAllBtn').disabled = !(players.length > 0 && attendeeIds.size === players.length);
+
+  const n = attendeeIds.size;
+  const line = $('previewLine');
+  line.classList.remove('warn');
+  if(n < 2){
+    line.textContent = n === 0 ? '' : 'Need at least 2 attendees.';
+  } else {
+    const teams = Math.ceil(n / 2);
+    const holeCount = activeHoles().length;
+    const holesUsed = teams === 1 ? 1 : Math.min(Math.floor(teams / 2), holeCount);
+    let txt = `${n} attending → ${teams} team${teams === 1 ? '' : 's'} → ${holesUsed} starting hole${holesUsed === 1 ? '' : 's'}`;
+    if(n % 2 === 1) txt += ' (one player on own ball)';
+    if(holeCount === 0){
+      txt = 'No holes in play — open Course Setup and switch some on.';
+      line.classList.add('warn');
+    } else if(teams > maxTeams()){
+      txt += ` — over the ${maxTeams()}-team capacity for ${holeCount} holes; extras will stack on the last hole`;
+      line.classList.add('warn');
+    }
+    line.textContent = txt;
+  }
+
+  renderPayout();   // pot follows the attendee count
+}
+
+/* =========================================================================
+   COURSE SETUP — toggle holes in/out of play; tap par to cycle 3→4→5
+   ========================================================================= */
+function renderHoleGrid(){
+  const grid = $('holeGrid');
+  grid.innerHTML = '';
+  holeConfig.forEach(h => {
+    const cell = document.createElement('div');
+    cell.className = 'hole-cell' + (h.active ? ' active' : '');
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'hole-toggle';
+    toggle.textContent = h.hole;
+    toggle.setAttribute('aria-pressed', h.active ? 'true' : 'false');
+    toggle.setAttribute('aria-label', `Hole ${h.hole} ${h.active ? 'in play' : 'out of play'}`);
+    toggle.addEventListener('click', () => {
+      h.active = !h.active;
+      renderHoleGrid();
+      updateCountAndPreview();
+    });
+
+    const parBtn = document.createElement('button');
+    parBtn.type = 'button';
+    parBtn.className = 'par-btn';
+    parBtn.textContent = `Par ${h.par}`;
+    parBtn.title = 'Tap to change par';
+    parBtn.addEventListener('click', () => {
+      h.par = h.par >= 5 ? 3 : h.par + 1;
+      renderHoleGrid();
+    });
+
+    cell.appendChild(toggle);
+    cell.appendChild(parBtn);
+    grid.appendChild(cell);
+  });
+
+  const active = activeHoles();
+  const sum = $('holesSummary');
+  if(active.length === 0){
+    sum.textContent = 'No holes in play — teams can\u2019t be assigned.';
+    sum.classList.add('warn');
+  } else {
+    sum.classList.remove('warn');
+    sum.textContent = `${active.length} hole${active.length === 1 ? '' : 's'} in play (${active.map(h => h.hole).join(', ')}) · capacity ${maxTeams()} teams`;
+  }
+  schedulePersist();
+}
+
+/* =========================================================================
+   PAYOUTS — MGA money ($2/player) off the top, then split the pool:
+   under 30 players → 2 places 60/40; over 30 → 3 places 50/30/20.
+   ========================================================================= */
+function fmtMoney(v){
+  const r = Math.round(v * 100) / 100;
+  return '$' + r.toFixed(2).replace(/\.00$/, '');
+}
+
+function computePayout(n, buyin){
+  const pot = n * buyin;
+  const mga = n * 2;
+  const pool = pot - mga;
+  const three = n > 30;
+  const splits = three ? [0.5, 0.3, 0.2] : [0.6, 0.4];
+  return {
+    n, buyin, pot, mga, pool,
+    tier: splits.length,
+    tierLabel: three ? 'over 30 players — 3 places (50/30/20)' : 'under 30 players — 2 places (60/40)',
+    places: splits.map(pct => ({pct, amount: pool * pct}))
+  };
+}
+
+function renderPayout(){
+  const out = $('payoutBreakdown');
+  out.innerHTML = '';
+  const n = attendeeIds.size;                       // pot = everyone checked in
+  const buyin = parseFloat($('payoutBuyin').value);
+
+  if(!n || isNaN(buyin)){
+    const msg = document.createElement('p');
+    msg.className = 'empty-msg';
+    msg.textContent = 'Check players in above — the pot follows the attendee count automatically.';
+    out.appendChild(msg);
+    return;
+  }
+
+  const p = computePayout(n, buyin);
+  const block = document.createElement('div');
+  block.className = 'payout-block';
+
+  const row = (labelText, amountText, cls) => {
+    const r = document.createElement('div');
+    r.className = 'payout-row' + (cls ? ' ' + cls : '');
+    const label = document.createElement('span');
+    label.textContent = labelText;
+    const leader = document.createElement('div');
+    leader.className = 'leader-line';
+    const amount = document.createElement('span');
+    amount.className = 'amount';
+    amount.textContent = amountText;
+    r.appendChild(label); r.appendChild(leader); r.appendChild(amount);
+    block.appendChild(r);
+  };
+
+  row(`Pot — ${p.n} players × ${fmtMoney(p.buyin)}`, fmtMoney(p.pot));
+  row(`MGA money — ${p.n} × $2`, '− ' + fmtMoney(p.mga));
+  row('Payout pool', fmtMoney(p.pool), 'pool');
+
+  if(p.pool <= 0){
+    out.appendChild(block);
+    const warn = document.createElement('p');
+    warn.className = 'warn-note';
+    warn.style.marginTop = '8px';
+    warn.textContent = '⚠ The pot doesn\u2019t cover the MGA cut — raise the buy-in.';
+    out.appendChild(warn);
+    return;
+  }
+
+  const labels = ['1st', '2nd', '3rd'];
+  p.places.forEach((pl, i) => {
+    row(`${labels[i]} place — ${Math.round(pl.pct * 100)}%`, fmtMoney(pl.amount), 'place');
+  });
+  out.appendChild(block);
+
+  const tierNote = document.createElement('p');
+  tierNote.className = 'small-note';
+  tierNote.textContent = `Paying ${p.tier} places (${p.tierLabel}).`;
+  out.appendChild(tierNote);
+}
+
+/* =========================================================================
+   DEVICE AUTO-SAVE — everything persists in this browser's local storage
+   as you work, and restores on open. The season file remains the durable,
+   portable backup. Degrades silently where storage is unavailable
+   (e.g., private browsing).
+   ========================================================================= */
+const STORE_KEY = 'mcc-mga-scramble-v1';
+let persistTimer = null;
+
+function canStore(){
+  try{
+    if(typeof localStorage === 'undefined' || !localStorage) return false;
+    return true;
+  }catch(e){ return false; }
+}
+
+function schedulePersist(){
+  if(!canStore()) return;
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(persistNow, 250);
+}
+
+function persistNow(){
+  if(!canStore()) return;
+  try{
+    const data = {
+      v: 1,
+      savedAt: new Date().toISOString(),
+      roster: players.map(p => p.name),
+      attendees: players.filter(p => attendeeIds.has(p.id)).map(p => p.name),
+      holes: holeConfig,
+      history: weeklyHistory,
+      sponsors: sponsorsText,
+      buyin: $('payoutBuyin').value,
+      weekLabel: weekLabelValue,
+      weekNotes: weekNotesValue,
+      repeatInfo: lastRepeatInfo,
+      overflow: lastOverflow,
+      card: lastResults.map(h => ({
+        hole: h.hole, par: h.par,
+        teams: h.teams.map(t => ({players: t.players.map(p => p.name), solo: t.type === 'solo', score: t.score}))
+      }))
+    };
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  }catch(e){ /* storage full or blocked — season file still works */ }
+}
+
+function restoreFromStorage(){
+  if(!canStore()) return false;
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    players = []; nextId = 1;
+    (d.roster || []).forEach(n => players.push({id: nextId++, name: String(n)}));
+    attendeeIds = new Set();
+    (d.attendees || []).forEach(n => {
+      const p = players.find(x => x.name === n);
+      if(p) attendeeIds.add(p.id);
+    });
+    if(Array.isArray(d.holes) && d.holes.length){
+      holeConfig = DEFAULT_HOLES.map(def => {
+        const sv = d.holes.find(h => h.hole === def.hole);
+        return sv ? {hole: def.hole, par: sv.par || def.par, active: !!sv.active} : {...def};
+      });
+    }
+    weeklyHistory = (d.history || []).map(e => { e.id = nextHistoryId++; return normalizeHistoryEntry(e); });
+    rebuildPairHistory();
+    if(typeof d.sponsors === 'string'){
+      sponsorsText = d.sponsors;
+      $('sponsorsBox').value = sponsorsText;
+    }
+    if(d.buyin !== undefined) $('payoutBuyin').value = d.buyin;
+    weekLabelValue = d.weekLabel || '';
+    weekNotesValue = d.weekNotes || '';
+    lastRepeatInfo = d.repeatInfo || null;
+    lastOverflow = !!d.overflow;
+    lastResults = (d.card || []).map(h => ({
+      hole: h.hole, par: h.par,
+      teams: (h.teams || []).map(t => ({
+        type: t.solo ? 'solo' : 'pair',
+        players: (t.players || []).map(n => ({id: nextId++, name: String(n)})),
+        score: typeof t.score === 'number' ? t.score : 0
+      }))
+    }));
+    return true;
+  }catch(e){ return false; }
+}
+
+function clearDeviceData(){
+  if(!canStore()){ toast('No device storage available in this browser.'); return; }
+  if(!confirm('Clear all data saved on this device? The current session stays on screen — save a season file first if you want a backup.')) return;
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  toast('Device data cleared — reload for a fresh start.');
+}
+
+/* =========================================================================
+   SAVE / LOAD & EXPORTS
+   ========================================================================= */
+function saveSeasonJSON(){
+  const payload = {
+    app: 'golf-scramble',
+    version: 3,
+    savedAt: new Date().toISOString(),
+    roster: players.map(p => p.name),
+    holes: holeConfig,
+    sponsors: sponsorsText,
+    history: weeklyHistory
+  };
+  downloadFile('mcc-mga-season.json', JSON.stringify(payload, null, 2), 'application/json');
+  toast('Season file saved.');
+}
+
+function loadSeasonJSON(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(Array.isArray(data)){
+        // Legacy history-only export: append weeks, keep current roster
+        data.forEach(entry => {
+          entry.id = nextHistoryId++;
+          weeklyHistory.push(normalizeHistoryEntry(entry));
+        });
+        weeklyHistory.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+        rebuildPairHistory();
+        renderHistory();
+        toast(`Imported ${data.length} week(s) of history.`);
+      } else if(data && (data.app === 'golf-scramble' || data.roster)){
+        // Full season file: replace roster + history
+        players = [];
+        nextId = 1;
+        (data.roster || []).forEach(name => {
+          if(name && !players.some(p => p.name.toLowerCase() === String(name).toLowerCase())){
+            players.push({id: nextId++, name: String(name)});
+          }
+        });
+        attendeeIds.clear();
+        if(Array.isArray(data.holes) && data.holes.length){
+          holeConfig = DEFAULT_HOLES.map(d => {
+            const saved = data.holes.find(h => h.hole === d.hole);
+            return saved ? {hole:d.hole, par:saved.par || d.par, active:!!saved.active} : {...d};
+          });
+          renderHoleGrid();
+        }
+        if(typeof data.sponsors === 'string'){
+          sponsorsText = data.sponsors;
+          $('sponsorsBox').value = sponsorsText;
+        }
+        weeklyHistory = (data.history || []).map(entry => {
+          entry.id = nextHistoryId++;
+          return normalizeHistoryEntry(entry);
+        });
+        weeklyHistory.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+        rebuildPairHistory();
+        renderPlayerGrid($('playerBox').value);
+        renderHistory();
+        $('seasonCard').open = true;
+        toast(`Season loaded: ${players.length} players, ${weeklyHistory.length} week(s).`);
+      } else {
+        throw new Error('Unrecognized file shape');
+      }
+    }catch(err){
+      toast("Couldn't read that file — expected a season or history JSON.");
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function exportRosterCSV(){
+  if(players.length === 0){ toast('Roster is empty.'); return; }
+  const rows = ['Name', ...players.map(p => `"${p.name.replace(/"/g, '""')}"`)];
+  downloadFile('mcc-mga-roster.csv', rows.join('\n'), 'text/csv');
+  toast('Roster CSV saved.');
+}
+
+function importRosterCSV(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const lines = reader.result.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    let added = 0;
+    lines.forEach(line => {
+      let name = line.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+      if(!name || name.toLowerCase() === 'name') return;
+      if(!players.some(p => p.name.toLowerCase() === name.toLowerCase())){
+        players.push({id: nextId++, name});
+        added++;
+      }
+    });
+    renderPlayerGrid($('playerBox').value);
+    toast(`Imported ${added} new player(s).`);
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function resultsAsText(){
+  const lines = [weekLabelValue || defaultWeekLabel(), ''];
+  lastResults.forEach(h => {
+    lines.push(`Hole ${h.hole} (Par ${h.par})`);
+    const prefix = `  Hole ${h.hole}: `;
+    const indent = ' '.repeat(prefix.length);
+    h.teams.forEach((t, i) => {
+      lines.push(`${i === 0 ? prefix : indent}${teamNamesLabel(t)} — ${formatScore(t.score)}`);
+    });
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+async function copyResults(){
+  if(lastResults.length === 0){ toast('Generate a card first.'); return; }
+  const ok = await copyText(resultsAsText());
+  toast(ok ? 'Card copied — paste it anywhere.' : "Couldn't copy on this browser — use TXT export instead.");
+}
+
+function exportResults(format){
+  if(lastResults.length === 0){ toast('Generate a card first.'); return; }
+  if(format === 'csv'){
+    const rows = ['Hole,Par,Team,Score'];
+    lastResults.forEach(h => {
+      h.teams.forEach(t => {
+        rows.push(`${h.hole},${h.par},"${teamNamesLabel(t).replace(/"/g, '""')}",${formatScore(t.score)}`);
+      });
+    });
+    downloadFile('mcc-mga-card.csv', rows.join('\n'), 'text/csv');
+  } else {
+    downloadFile('mcc-mga-card.txt', resultsAsText(), 'text/plain');
+  }
+  toast('Card exported.');
+}
+
+function exportHistoryCSV(){
+  if(weeklyHistory.length === 0){ toast('No saved weeks yet.'); return; }
+  const rows = ['Week,Date,Hole,Par,Team,Score,Notes,Attendees'];
+  weeklyHistory.forEach(entry => {
+    const week = entry.label.replace(/"/g, '""');
+    const date = new Date(entry.savedAt).toLocaleDateString();
+    const notes = (entry.notes || '').replace(/"/g, '""');
+    const att = entry.attendees.join('; ').replace(/"/g, '""');
+    entry.holes.forEach(h => {
+      h.teams.forEach(t => {
+        const team = (t.players.join(' / ') + (t.solo ? ' (own ball)' : '')).replace(/"/g, '""');
+        rows.push(`"${week}",${date},${h.hole},${h.par},"${team}","${t.score || ''}","${notes}","${att}"`);
+      });
+    });
+  });
+  downloadFile('mcc-mga-history.csv', rows.join('\n'), 'text/csv');
+  toast('History CSV saved.');
+}
+
+/* =========================================================================
+   TV DISPLAY MODE — big-screen board for casting to a 1080p TV.
+   Shows today's card (scores stay tappable from the iPad), payouts, and
+   season standings. All setup lives back in the normal view.
+   ========================================================================= */
+function syncTV(){
+  if(document.body.classList.contains('tv-mode')) renderTVBoard();
+}
+
+function parseSponsors(){
+  return sponsorsText.split(/\n/)
+    .map(l => l.trim()).filter(Boolean)
+    .map(l => {
+      const [name, tag] = l.split('|').map(x => x.trim());
+      return {name, tag: tag || ''};
+    });
+}
+
+/* Browser fullscreen (with iPad Safari's webkit-prefixed fallback) */
+function isFS(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function requestFS(){
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+  if(fn){
+    try{
+      const p = fn.call(el);
+      if(p && p.catch) p.catch(() => {});
+    }catch(e){}
+  }
+}
+function exitFS(){
+  if(!isFS()) return;
+  const fn = document.exitFullscreen || document.webkitExitFullscreen;
+  if(fn){
+    try{
+      const p = fn.call(document);
+      if(p && p.catch) p.catch(() => {});
+    }catch(e){}
+  }
+}
+function toggleFS(){
+  if(isFS()) exitFS(); else requestFS();
+}
+function updateFSLabel(){
+  $('fsToggle').textContent = isFS() ? '⛶ Exit Fullscreen' : '⛶ Fullscreen';
+}
+
+function toggleTV(){
+  const on = document.body.classList.toggle('tv-mode');
+  $('tvBoard').hidden = !on;
+  $('tvToggle').textContent = on ? '✕ Exit Dashboard' : '📺 Dashboard';
+  if(on){
+    renderTVBoard();
+    requestFS();          // TV Display goes straight to fullscreen (falls back silently)
+  } else {
+    exitFS();
+  }
+  window.scrollTo(0, 0);
+}
+
+function tvHoleBlock(h){
+  const block = document.createElement('div');
+  block.className = 'hole-block';
+  const head = document.createElement('div');
+  head.className = 'hole-head';
+  const num = document.createElement('span');
+  num.className = 'hole-num'; num.textContent = `Hole ${h.hole}`;
+  const par = document.createElement('span');
+  par.className = 'hole-par'; par.textContent = `Par ${h.par}`;
+  head.appendChild(num); head.appendChild(par);
+  block.appendChild(head);
+
+  h.teams.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'team-row';
+    const names = document.createElement('div');
+    names.className = 'team-names';
+    t.players.forEach((p, i) => {
+      if(i > 0){
+        const j = document.createElement('span');
+        j.className = 'pjoin'; j.textContent = '/';
+        names.appendChild(j);
+      }
+      const span = document.createElement('span');
+      span.className = 'pname'; span.textContent = p.name;
+      names.appendChild(span);
+    });
+    if(t.type === 'solo'){
+      const ob = document.createElement('span');
+      ob.className = 'own-ball'; ob.textContent = 'own ball';
+      names.appendChild(ob);
+    }
+    row.appendChild(names);
+    block.appendChild(row);
+  });
+  return block;
+}
+
+function renderTVBoard(){
+  const board = $('tvBoard');
+  board.innerHTML = '';
+
+  /* ---- Top strip: payout math spread across the full width ---- */
+  const payTop = document.createElement('div');
+  payTop.className = 'tv-paytop';
+  const chip = (labelText, amountText, cls) => {
+    const c = document.createElement('div');
+    c.className = 'pay-chip' + (cls ? ' ' + cls : '');
+    const l = document.createElement('span');
+    l.className = 'pay-label'; l.textContent = labelText;
+    const a = document.createElement('span');
+    a.className = 'pay-amount'; a.textContent = amountText;
+    c.appendChild(l); c.appendChild(a);
+    payTop.appendChild(c);
+  };
+  const lead = document.createElement('span');
+  lead.className = 'pay-strip-title';
+  lead.textContent = 'Payouts';
+  payTop.appendChild(lead);
+  const n = attendeeIds.size;
+  const buyin = parseFloat($('payoutBuyin').value);
+  if(!n || isNaN(buyin)){
+    chip('Pot', 'appears once players are checked in');
+  } else {
+    const pp = computePayout(n, buyin);
+    chip(`Pot — ${pp.n} × ${fmtMoney(pp.buyin)}`, fmtMoney(pp.pot));
+    chip(`MGA — ${pp.n} × $2`, '− ' + fmtMoney(pp.mga));
+    chip('Payout pool', fmtMoney(pp.pool), 'pool');
+    if(pp.pool > 0){
+      const labels = ['1st', '2nd', '3rd'];
+      pp.places.forEach((pl, i) =>
+        chip(`${labels[i]} — ${Math.round(pl.pct * 100)}%`, fmtMoney(pl.amount), 'place'));
+    }
+  }
+  board.appendChild(payTop);
+
+  /* ---- Left column: today's card ---- */
+  const left = document.createElement('div');
+  const title = document.createElement('h2');
+  title.className = 'tv-col-title';
+  title.textContent = "Today's Matchups";
+  left.appendChild(title);
+
+  if(lastResults.length === 0){
+    const msg = document.createElement('p');
+    msg.className = 'tv-empty';
+    msg.textContent = 'No pairings yet — exit the dashboard and generate this week\u2019s card.';
+    left.appendChild(msg);
+  } else {
+    if(lastRepeatInfo){
+      const meta = document.createElement('p');
+      meta.className = 'results-meta';
+      meta.textContent = lastRepeatInfo.repeats === 0
+        ? `All ${lastRepeatInfo.total} pairings differ from last week.`
+        : `${lastRepeatInfo.repeats} of ${lastRepeatInfo.total} pairings repeat last week.`;
+      left.appendChild(meta);
+    }
+    const holes = document.createElement('div');
+    holes.className = 'tv-holes';
+    lastResults.forEach(h => holes.appendChild(tvHoleBlock(h)));
+    left.appendChild(holes);
+  }
+  board.appendChild(left);
+
+  /* ---- Bottom strip: sponsors ---- */
+  const sponsors = parseSponsors();
+  if(sponsors.length){
+    const strip = document.createElement('div');
+    strip.className = 'tv-sponsors';
+    const sTitle = document.createElement('h2');
+    sTitle.className = 'tv-col-title';
+    sTitle.textContent = "Tonight's Sponsors";
+    strip.appendChild(sTitle);
+    const rowEl = document.createElement('div');
+    rowEl.className = 'sponsor-row';
+    sponsors.forEach(sp => {
+      const card = document.createElement('div');
+      card.className = 'sponsor-card';
+      const nm = document.createElement('div');
+      nm.className = 'sponsor-name';
+      nm.textContent = sp.name;
+      card.appendChild(nm);
+      if(sp.tag){
+        const tg = document.createElement('div');
+        tg.className = 'sponsor-tag';
+        tg.textContent = sp.tag;
+        card.appendChild(tg);
+      }
+      rowEl.appendChild(card);
+    });
+    strip.appendChild(rowEl);
+    board.appendChild(strip);
+  }
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function bindEvents(){
+  $('playerBox').addEventListener('input', e => renderPlayerGrid(e.target.value));
+  $('playerBox').addEventListener('keydown', e => { if(e.key === 'Enter') onPlayerBoxEnter(); });
+  $('selectAllBtn').addEventListener('click', () => {
+    players.forEach(p => attendeeIds.add(p.id));
+    renderPlayerGrid($('playerBox').value);
+  });
+  $('selectNoneBtn').addEventListener('click', () => {
+    attendeeIds.clear();
+    renderPlayerGrid($('playerBox').value);
+  });
+  $('removeAllBtn').addEventListener('click', onRemoveAllPlayers);
+  $('genRandomBtn').addEventListener('click', () => generateSchedule('random'));
+  $('genBalancedBtn').addEventListener('click', () => generateSchedule('balanced'));
+  $('genScoredBtn').addEventListener('click', () => generateSchedule('scored'));
+  $('clearDeviceBtn').addEventListener('click', clearDeviceData);
+  $('payoutBuyin').addEventListener('input', () => { renderPayout(); schedulePersist(); });
+  $('exportHistoryCsvBtn').addEventListener('click', exportHistoryCSV);
+  $('clearHistoryBtn').addEventListener('click', clearHistory);
+  $('saveSeasonBtn').addEventListener('click', saveSeasonJSON);
+  $('loadSeasonBtn').addEventListener('click', () => $('fileLoadSeason').click());
+  $('fileLoadSeason').addEventListener('change', loadSeasonJSON);
+  $('exportRosterBtn').addEventListener('click', exportRosterCSV);
+  $('importRosterBtn').addEventListener('click', () => $('fileImportRoster').click());
+  $('fileImportRoster').addEventListener('change', importRosterCSV);
+  $('tvToggle').addEventListener('click', toggleTV);
+  $('fsToggle').addEventListener('click', toggleFS);
+  $('sponsorsBox').addEventListener('input', e => { sponsorsText = e.target.value; syncTV(); schedulePersist(); });
+  if(document.addEventListener){
+    document.addEventListener('fullscreenchange', updateFSLabel);
+    document.addEventListener('webkitfullscreenchange', updateFSLabel);
+  }
+}
+
+function init(){
+  $('todayDate').textContent = new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+  const restored = restoreFromStorage();          // device auto-save, if present
+  if(!restored){
+    STARTER_NAMES.forEach(n => players.push({id: nextId++, name: n}));
+  }
+  renderHoleGrid();
+  renderPlayerGrid('');
+  renderHistory();
+  if(lastResults.length) renderResults();         // bring back an in-progress card
+  bindEvents();
+  if(restored) toast('Restored from this device’s saved data.');
+}
+
+init();
+</script>
+</body>
+</html>
