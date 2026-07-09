@@ -70,8 +70,33 @@ input{
 .pbtn.sel{background:var(--fairway); color:#fff; font-weight:600;}
 .xbtn{background:none; border:none; color:var(--muted); cursor:pointer; padding:0 6px;}
 .xbtn:hover{color:var(--flag);}
-.result-line{font-size:.95rem; padding:5px 0; border-bottom:1px dashed var(--tee-soft);}
-.result-line b{color:var(--fairway);}
+.result-line{
+  font-size:.95rem; padding:5px 0; border-bottom:1px dashed var(--tee-soft);
+  display:flex; align-items:center; gap:8px;
+}
+.result-line b{color:var(--fairway); flex:0 0 66px;}
+.result-line .tname{flex:1; min-width:0;}
+.scorectl{display:flex; align-items:center; gap:5px; flex:0 0 auto;}
+.sbtn{
+  border:1px solid var(--tee-soft); background:var(--card); color:var(--fairway);
+  border-radius:6px; font-size:.68rem; font-weight:700; padding:5px 8px; cursor:pointer;
+  text-transform:uppercase;
+}
+.sval{min-width:46px; text-align:center; font-weight:700; font-variant-numeric:tabular-nums;
+  border-bottom:2px solid var(--tee-soft); font-size:.92rem;}
+.hist .sc{color:var(--fairway); font-weight:700;}
+table.standings{
+  width:100%; border-collapse:collapse; font-size:.86rem;
+  font-variant-numeric:tabular-nums; margin-bottom:4px;
+}
+table.standings th{
+  text-align:left; font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); font-weight:700; padding:4px 8px; border-bottom:2px solid var(--tee-soft);
+}
+table.standings td{padding:6px 8px; border-bottom:1px dashed var(--tee-soft);}
+table.standings tr:first-child td{font-weight:700;}
+table.standings td.num, table.standings th.num{text-align:right;}
+.hist .meta{font-size:.76rem; color:var(--muted); margin-top:5px;}
 .hist{border:1px solid var(--tee-soft); border-radius:8px; background:var(--card2); padding:8px 12px; margin-bottom:8px; font-size:.85rem;}
 .hist .hd{display:flex; justify-content:space-between; font-weight:700; margin-bottom:4px;}
 .hist .hd span:last-child{color:var(--muted); font-weight:400; font-size:.75rem;}
@@ -152,9 +177,12 @@ input{
   <section class="card">
     <h2>This Week's Card</h2>
     <div id="results"><p class="small-note">No pairings yet.</p></div>
+    <label for="weekNotes" style="margin-top:12px;">Notes for this week (optional)</label>
+    <input type="text" id="weekNotes" placeholder="e.g. 2nd place chip off winners = …">
     <div class="btn-group">
       <button class="btn" id="saveWeekBtn" disabled>💾 Save This Week</button>
     </div>
+    <p class="small-note">Saving stores the pairings, each team's score, your notes, and the attendee list to the shared database.</p>
   </section>
 
   <!-- ============ SYNC ============ -->
@@ -168,10 +196,11 @@ input{
     <p class="small-note">Sync Now refreshes the roster and history from the shared database. Load Latest Data also pulls the most recent saved week onto this screen — handy when someone else generated the card.</p>
   </section>
 
-  <!-- ============ HISTORY ============ -->
+  <!-- ============ SEASON: STANDINGS + HISTORY ============ -->
   <details class="card">
-    <summary>Weekly History</summary>
-    <div id="historyArea"><p class="small-note">No weeks saved yet.</p></div>
+    <summary>Season — Standings &amp; Weekly History</summary>
+    <div id="standingsArea"></div>
+    <div id="historyArea" style="margin-top:12px;"><p class="small-note">No weeks saved yet.</p></div>
   </details>
 
 </main>
@@ -187,8 +216,8 @@ input{
    - Project URL looks like:  https://abcdefghijklm.supabase.co
    - anon public key is the long string labeled "anon" / "public"
    ========================================================================= */
-const SUPABASE_URL      = "https://nyyruwihplbqoefzwunm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55eXJ1d2locGxicW9lZnp3dW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MjU3MTMsImV4cCI6MjA5OTIwMTcxM30.aGQfGSzIpEqpV2bX0vVjgKgSdrsLnq2QWVnGwlRDEDo";
+const SUPABASE_URL      = "PASTE-YOUR-PROJECT-URL-HERE";
+const SUPABASE_ANON_KEY = "PASTE-YOUR-ANON-PUBLIC-KEY-HERE";
 /* ========================================================================= */
 
 'use strict';
@@ -295,6 +324,15 @@ function assignToHoles(teams){
 function teamLabel(t){
   return t.length === 1 ? `${t[0]} (own ball)` : `${t[0]} + ${t[1]}`;
 }
+function fmtScore(n){ return n === 0 ? 'Even' : (n > 0 ? `+${n}` : `${n}`); }
+function parseScore(s){
+  if(typeof s === 'number') return s;
+  if(!s) return 0;
+  const str = String(s).trim().toLowerCase();
+  if(str === 'even' || str === 'e') return 0;
+  const n = parseInt(str, 10);
+  return isNaN(n) ? 0 : n;
+}
 
 /* =========================================================================
    SUPABASE DATA LAYER
@@ -328,7 +366,7 @@ async function deletePlayer(id){
 
 async function loadHistory(){
   const {data, error} = await sb.from('pairing_history')
-    .select('id,week_date,pairs,created_at')
+    .select('id,week_date,pairs,notes,attendees,created_at')
     .order('created_at', {ascending:false})
     .limit(20);
   if(error) throw error;
@@ -346,7 +384,12 @@ async function loadHistory(){
 async function saveWeek(){
   const payload = {
     week_date: new Date().toISOString().slice(0, 10),
-    pairs: currentCard
+    pairs: currentCard.map(h => ({
+      hole: h.hole, par: h.par, teams: h.teams,
+      scores: (h.scores || h.teams.map(() => 0)).map(fmtScore)
+    })),
+    notes: $('weekNotes').value.trim(),
+    attendees: players.filter(p => attendeeIds.has(p.id)).map(p => p.name)
   };
   const {error} = await sb.from('pairing_history').insert(payload);
   if(error) throw error;
@@ -417,19 +460,112 @@ function renderResults(){
     area.innerHTML = '<p class="small-note">No pairings yet.</p>';
   } else {
     currentCard.forEach(h => {
-      const line = document.createElement('div');
-      line.className = 'result-line';
-      const b = document.createElement('b');
-      b.textContent = `Hole ${h.hole}: `;
-      line.appendChild(b);
-      line.appendChild(document.createTextNode(h.teams.map(teamLabel).join(' vs ')));
-      area.appendChild(line);
+      h.teams.forEach((t, ti) => {
+        const line = document.createElement('div');
+        line.className = 'result-line';
+        const b = document.createElement('b');
+        b.textContent = ti === 0 ? `Hole ${h.hole}:` : '';
+        line.appendChild(b);
+        const name = document.createElement('span');
+        name.className = 'tname';
+        name.textContent = teamLabel(t);
+        line.appendChild(name);
+        const ctl = document.createElement('div');
+        ctl.className = 'scorectl';
+        const down = document.createElement('button');
+        down.className = 'sbtn'; down.textContent = 'Down';
+        const val = document.createElement('span');
+        val.className = 'sval'; val.textContent = fmtScore(h.scores[ti]);
+        const up = document.createElement('button');
+        up.className = 'sbtn'; up.textContent = 'Up';
+        down.addEventListener('click', () => { h.scores[ti] -= 1; renderResults(); });
+        up.addEventListener('click', () => { h.scores[ti] += 1; renderResults(); });
+        ctl.appendChild(down); ctl.appendChild(val); ctl.appendChild(up);
+        line.appendChild(ctl);
+        area.appendChild(line);
+      });
     });
   }
   $('saveWeekBtn').disabled = currentCard.length === 0;
 }
 
+/* Strict score parse for standings: null when a score wasn't recorded */
+function parseScoreN(v){
+  if(v === undefined || v === null || v === '') return null;
+  if(typeof v === 'number') return isNaN(v) ? null : v;
+  const str = String(v).trim().toLowerCase();
+  if(str === 'even' || str === 'e') return 0;
+  const n = parseInt(str, 10);
+  return isNaN(n) ? null : n;
+}
+function fmtAvg(v){
+  if(v === 0) return 'E';
+  const t = (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '');
+  return v > 0 ? `+${t}` : t;
+}
+
+function computeStandings(){
+  const stats = {};   // name -> {name, played, wins, rounds, total, best}
+  historyRows.forEach(row => {
+    const weekScores = [];
+    (row.pairs || []).forEach(h => (h.teams || []).forEach((t, i) => {
+      const sc = parseScoreN((h.scores || [])[i]);
+      if(sc !== null) weekScores.push(sc);
+    }));
+    const weekMin = weekScores.length ? Math.min(...weekScores) : null;
+    (row.pairs || []).forEach(h => (h.teams || []).forEach((t, i) => {
+      const sc = parseScoreN((h.scores || [])[i]);
+      t.forEach(name => {
+        if(!stats[name]) stats[name] = {name, played:0, wins:0, rounds:0, total:0, best:null};
+        const p = stats[name];
+        p.played++;
+        if(sc !== null){
+          p.rounds++;
+          p.total += sc;
+          if(p.best === null || sc < p.best) p.best = sc;
+          if(weekMin !== null && sc === weekMin) p.wins++;
+        }
+      });
+    }));
+  });
+  const avg = p => p.rounds ? p.total / p.rounds : Infinity;
+  return Object.values(stats).sort((a, b) =>
+    b.wins - a.wins || avg(a) - avg(b) || a.name.localeCompare(b.name));
+}
+
+function renderStandings(){
+  const area = $('standingsArea');
+  area.innerHTML = '';
+  const standings = computeStandings();
+  if(!standings.length || !standings.some(x => x.rounds > 0)) return;
+
+  const table = document.createElement('table');
+  table.className = 'standings';
+  table.innerHTML = '<thead><tr><th>Player</th><th class="num">Wks</th><th class="num">Wins</th><th class="num">Avg</th><th class="num">Best</th></tr></thead>';
+  const tb = document.createElement('tbody');
+  standings.forEach(x => {
+    const tr = document.createElement('tr');
+    [x.name, String(x.played), String(x.wins),
+     x.rounds ? fmtAvg(x.total / x.rounds) : '—',
+     x.best === null ? '—' : fmtScore(x.best)
+    ].forEach((c, i) => {
+      const td = document.createElement('td');
+      if(i > 0) td.className = 'num';
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb);
+  area.appendChild(table);
+  const note = document.createElement('p');
+  note.className = 'small-note';
+  note.textContent = 'Ranked by wins, then average round. A win = being on the week’s lowest round (ties share it).';
+  area.appendChild(note);
+}
+
 function renderHistory(){
+  renderStandings();
   const area = $('historyArea');
   area.innerHTML = '';
   if(historyRows.length === 0){
@@ -449,9 +585,32 @@ function renderHistory(){
     div.appendChild(hd);
     (row.pairs || []).forEach(h => {
       const line = document.createElement('div');
-      line.textContent = `Hole ${h.hole}: ${(h.teams || []).map(teamLabel).join(' vs ')}`;
+      const scores = h.scores || [];
+      line.textContent = `Hole ${h.hole}: `;
+      (h.teams || []).forEach((t, i) => {
+        if(i > 0) line.appendChild(document.createTextNode('  vs  '));
+        line.appendChild(document.createTextNode(teamLabel(t)));
+        if(scores[i]){
+          const sc = document.createElement('span');
+          sc.className = 'sc';
+          sc.textContent = ` (${scores[i]})`;
+          line.appendChild(sc);
+        }
+      });
       div.appendChild(line);
     });
+    if(row.notes){
+      const n = document.createElement('div');
+      n.className = 'meta';
+      n.textContent = `Notes: ${row.notes}`;
+      div.appendChild(n);
+    }
+    if(Array.isArray(row.attendees) && row.attendees.length){
+      const a = document.createElement('div');
+      a.className = 'meta';
+      a.textContent = `${row.attendees.length} attending: ${row.attendees.join(', ')}`;
+      div.appendChild(a);
+    }
     const del = document.createElement('button');
     del.className = 'btn ghost'; del.style.marginTop = '6px'; del.textContent = 'Delete week';
     del.addEventListener('click', async () => {
@@ -491,7 +650,7 @@ function onGenerate(mode){
   const names = players.filter(p => attendeeIds.has(p.id)).map(p => p.name);
   if(names.length < 2){ toast('Select at least 2 attendees.'); return; }
   const teams = formTeams(names, mode);
-  currentCard = assignToHoles(teams);
+  currentCard = assignToHoles(teams).map(h => ({...h, scores: h.teams.map(() => 0)}));
   renderResults();
   const reps = teams.filter(t => t.length === 2 && wasLastWeek(t[0], t[1])).length;
   toast(reps === 0 ? 'Pairings ready — no repeats from last week.'
@@ -531,7 +690,11 @@ async function loadLatest(){
   await syncNow(false);
   const latest = historyRows[0];
   if(latest && Array.isArray(latest.pairs)){
-    currentCard = latest.pairs;
+    currentCard = latest.pairs.map(h => ({
+      hole: h.hole, par: h.par, teams: h.teams || [],
+      scores: (h.scores || (h.teams || []).map(() => 0)).map(parseScore)
+    }));
+    $('weekNotes').value = latest.notes || '';
     renderResults();
     toast(`Loaded the latest saved card (${latest.week_date || 'undated'}).`);
   } else {
