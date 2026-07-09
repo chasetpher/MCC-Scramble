@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCC — MGA Scramble (Synced)</title>
+
+<!-- Supabase JS client (the one external script; requires internet) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ---------- Minimal scorecard theme ---------- */
+:root{
+  --paper:#f2efe6; --card:#fbf9f3; --card2:#f5f2e9;
+  --ink:#24312a; --muted:#6d7a70;
+  --fairway:#34694b; --fairway-deep:#21503a;
+  --tee-soft:#ddd5bd; --flag:#b0402f; --chip:#e9e4d5;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.45; padding-bottom:60px;
+}
+header{
+  background:var(--fairway-deep); color:#f4f1e6; text-align:center;
+  padding:16px; border-bottom:4px double var(--tee-soft);
+}
+header h1{
+  margin:0; font-family:Georgia,serif; font-weight:400; font-size:1.25rem;
+  letter-spacing:.14em; text-transform:uppercase;
+}
+header .sub{margin:4px 0 0; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; opacity:.85;}
+main{max-width:640px; margin:16px auto; padding:0 12px;}
+.card{
+  background:var(--card); border:1px solid var(--tee-soft); border-radius:10px;
+  padding:14px 16px; margin-bottom:14px;
+}
+.card h2, details.card > summary{
+  font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--fairway); margin:0 0 10px; cursor:default;
+}
+details.card > summary{cursor:pointer; list-style:none;}
+details.card[open] > summary{margin-bottom:10px;}
+label{font-size:.8rem; color:var(--muted); display:block;}
+input{
+  width:100%; padding:9px 11px; border:1px solid var(--tee-soft); border-radius:7px;
+  font-size:.95rem; margin-top:4px; background:var(--card2); color:var(--ink);
+}
+.row{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.btn{
+  border:none; border-radius:7px; padding:10px 14px; font-size:.88rem; cursor:pointer;
+  background:var(--fairway); color:#fff; font-weight:600;
+}
+.btn.secondary{background:transparent; color:var(--fairway); border:1.5px solid var(--fairway);}
+.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--tee-soft); font-weight:500;}
+.btn.danger{background:transparent; color:var(--flag); border:1px solid var(--flag);}
+.btn:disabled{opacity:.4; cursor:not-allowed;}
+.btn-group{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+.small-note{font-size:.76rem; color:var(--muted); margin-top:8px;}
+#statusLine{font-size:.8rem; color:var(--fairway); font-weight:600; min-height:1.2em; margin-top:8px;}
+#statusLine.err{color:var(--flag);}
+.plist{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:7px; margin-top:10px;}
+.pcell{display:flex; gap:4px;}
+.pbtn{
+  flex:1; text-align:left; border-radius:7px; padding:8px 10px; font-size:.86rem;
+  background:var(--chip); color:var(--ink); border:1px solid var(--tee-soft); cursor:pointer;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.pbtn.sel{background:var(--fairway); color:#fff; font-weight:600;}
+.xbtn{background:none; border:none; color:var(--muted); cursor:pointer; padding:0 6px;}
+.xbtn:hover{color:var(--flag);}
+.result-line{font-size:.95rem; padding:5px 0; border-bottom:1px dashed var(--tee-soft);}
+.result-line b{color:var(--fairway);}
+.hist{border:1px solid var(--tee-soft); border-radius:8px; background:var(--card2); padding:8px 12px; margin-bottom:8px; font-size:.85rem;}
+.hist .hd{display:flex; justify-content:space-between; font-weight:700; margin-bottom:4px;}
+.hist .hd span:last-child{color:var(--muted); font-weight:400; font-size:.75rem;}
+#toast{
+  position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+  background:var(--ink); color:var(--paper); padding:9px 16px; border-radius:8px;
+  font-size:.85rem; display:none; max-width:90vw; z-index:50;
+}
+.setup-warn{
+  background:#fdf3ec; border:1px solid var(--flag); color:var(--flag);
+  border-radius:8px; padding:10px 14px; font-size:.85rem; margin-bottom:14px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MCC — MGA Wednesday Night Scramble</h1>
+  <p class="sub">Synced Edition · One Shared Roster &amp; History Across All Devices</p>
+</header>
+
+<main>
+
+  <div id="setupWarn" class="setup-warn" hidden>
+    ⚠ Supabase isn't configured yet. Open this file in a text editor and paste your
+    Project URL and anon key at the top of the &lt;script&gt; section (clearly marked).
+  </div>
+
+  <!-- ============ ACCOUNT (optional if your tables are public) ============ -->
+  <details class="card">
+    <summary>Account (optional)</summary>
+    <div id="authForms">
+      <label for="authEmail">Email</label>
+      <input type="email" id="authEmail" autocomplete="email">
+      <label for="authPass" style="margin-top:8px;">Password</label>
+      <input type="password" id="authPass" autocomplete="current-password">
+      <div class="btn-group">
+        <button class="btn" id="signInBtn">Sign in</button>
+        <button class="btn secondary" id="signUpBtn">Sign up</button>
+        <button class="btn ghost" id="anonBtn">Continue anonymously</button>
+      </div>
+      <p class="small-note">With the beginner setup (public tables) you can ignore this entirely — the app works without signing in. Anonymous mode requires enabling the Anonymous provider in Supabase → Authentication.</p>
+    </div>
+    <div id="authState" hidden>
+      <p class="small-note" id="whoAmI"></p>
+      <button class="btn ghost" id="signOutBtn">Sign out</button>
+    </div>
+  </details>
+
+  <!-- ============ PLAYERS ============ -->
+  <section class="card">
+    <h2>Players</h2>
+    <label for="playerBox">Find or add a player</label>
+    <input type="search" id="playerBox" placeholder="Type a name…" autocomplete="off">
+    <div class="row" style="margin-top:8px; justify-content:space-between;">
+      <span class="small-note" id="countBadge" style="margin:0;">0 players · 0 attending</span>
+    </div>
+    <div class="btn-group" style="margin-top:6px;">
+      <button class="btn ghost" id="selAll">Select all</button>
+      <button class="btn ghost" id="selNone">Select none</button>
+    </div>
+    <div id="addRow"></div>
+    <div class="plist" id="playerList"></div>
+    <p class="small-note">Tap a name to mark them attending (green). Names not on the roster get an "Add" option — added players go straight to the shared database. ✕ removes a player for everyone.</p>
+  </section>
+
+  <!-- ============ GENERATE ============ -->
+  <section class="card">
+    <h2>Generate Pairings</h2>
+    <div class="btn-group" style="margin-top:0;">
+      <button class="btn" id="genFresh">⚖️ Fresh partners</button>
+      <button class="btn secondary" id="genRandom">🎲 Random</button>
+    </div>
+    <p class="small-note">One partner per player for the whole round. Holes 11 &amp; 13–18 host the teams (par 3s at 10 &amp; 12 are open play); 2 teams per hole, spreading 3rds across holes for big groups; an odd player takes their own ball on a 3-team hole. Fresh partners avoids repeating the most recent saved week.</p>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="card">
+    <h2>This Week's Card</h2>
+    <div id="results"><p class="small-note">No pairings yet.</p></div>
+    <div class="btn-group">
+      <button class="btn" id="saveWeekBtn" disabled>💾 Save This Week</button>
+    </div>
+  </section>
+
+  <!-- ============ SYNC ============ -->
+  <section class="card">
+    <h2>Sync</h2>
+    <div class="btn-group" style="margin-top:0;">
+      <button class="btn" id="syncBtn">🔄 Sync Now</button>
+      <button class="btn secondary" id="loadLatestBtn">⬇ Load Latest Data</button>
+    </div>
+    <p id="statusLine"></p>
+    <p class="small-note">Sync Now refreshes the roster and history from the shared database. Load Latest Data also pulls the most recent saved week onto this screen — handy when someone else generated the card.</p>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <details class="card">
+    <summary>Weekly History</summary>
+    <div id="historyArea"><p class="small-note">No weeks saved yet.</p></div>
+  </details>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================================
+   MCC — MGA SCRAMBLE, SYNCED EDITION (Supabase-backed)
+   -------------------------------------------------------------------------
+   >>> STEP 1: PASTE YOUR SUPABASE CREDENTIALS BELOW <<<
+   Find them in your Supabase project: Settings → API
+   - Project URL looks like:  https://abcdefghijklm.supabase.co
+   - anon public key is the long string labeled "anon" / "public"
+   ========================================================================= */
+const SUPABASE_URL      = "https://nyyruwihplbqoefzwunm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55eXJ1d2locGxicW9lZnp3dW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MjU3MTMsImV4cCI6MjA5OTIwMTcxM30.aGQfGSzIpEqpV2bX0vVjgKgSdrsLnq2QWVnGwlRDEDo";
+/* ========================================================================= */
+
+'use strict';
+
+/* ---------------- Course rules (fixed, per league spec) ---------------- */
+const PARS = {10:3, 11:4, 12:3, 13:4, 14:4, 15:4, 16:4, 17:5, 18:5};
+const TEAM_HOLES = [11,13,14,15,16,17,18];   // par 3s (10 & 12) never host teams
+
+/* ---------------- State ---------------- */
+let sb = null;                 // supabase client
+let players = [];              // [{id, name}] — id is the DB uuid
+let attendeeIds = new Set();   // local per-device selection
+let lastWeekPairs = {};        // "namea||nameb" -> true, from most recent saved week
+let currentCard = [];          // [{hole, par, teams:[[names...]]}]
+let historyRows = [];          // recent pairing_history rows
+
+const $ = id => document.getElementById(id);
+
+/* ---------------- UI helpers ---------------- */
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2600);
+}
+function setStatus(msg, isErr){
+  const el = $('statusLine');
+  el.textContent = msg || '';
+  el.className = isErr ? 'err' : '';
+}
+function setBusy(busy){
+  ['syncBtn','loadLatestBtn','genFresh','genRandom','saveWeekBtn','selAll','selNone']
+    .forEach(id => { const b = $(id); if(b) b.disabled = busy || (id==='saveWeekBtn' && currentCard.length===0); });
+}
+
+/* =========================================================================
+   PAIRING LOGIC (same rules as the offline app)
+   ========================================================================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pairKey(a, b){ return [a, b].map(s => s.trim().toLowerCase()).sort().join('||'); }
+function wasLastWeek(a, b){ return !!lastWeekPairs[pairKey(a, b)]; }
+
+// One fixed partner per player. 'fresh' avoids last week's pairings.
+function formTeams(names, mode){
+  const attempts = mode === 'fresh' ? 40 : 1;
+  let best = null, bestRepeats = Infinity;
+  for(let i = 0; i < attempts; i++){
+    const pool = shuffle(names);
+    const teams = [];
+    while(pool.length >= 2) teams.push([pool.shift(), pool.shift()]);
+    if(pool.length === 1) teams.push([pool[0]]);          // solo (own ball)
+    let repeats = 0;
+    teams.forEach(t => { if(t.length === 2 && wasLastWeek(t[0], t[1])) repeats++; });
+    if(repeats < bestRepeats){ best = teams; bestRepeats = repeats; }
+    if(bestRepeats === 0) break;
+  }
+  return best;
+}
+
+// 2 teams/hole; 3rd teams spread across holes; solo rides a 3-team hole.
+function assignToHoles(teams){
+  const holes = TEAM_HOLES.map(h => ({hole:h, par:PARS[h], teams:[]}));
+  const H = holes.length;
+  const order = shuffle(teams);
+  const T = order.length;
+  const counts = new Array(H).fill(0);
+  if(T <= 2 * H){
+    const fullPairs = Math.floor(T / 2);
+    for(let i = 0; i < fullPairs; i++) counts[i] = 2;
+    if(T % 2 === 1) counts[Math.max(0, fullPairs - 1)] += 1;
+  } else {
+    counts.fill(2);
+    let extra = T - 2 * H;
+    const triples = Math.min(extra, H);
+    for(let i = 0; i < triples; i++) counts[H - 1 - i] += 1;
+    extra -= triples;
+    if(extra > 0) counts[H - 1] += extra;                 // over 21 teams: stack on last
+  }
+  // Solo goes on a 3-team hole when one exists
+  let solo = null, soloPlaced = false;
+  if(counts.some(c => c >= 3)){
+    const si = order.findIndex(t => t.length === 1);
+    if(si !== -1) solo = order.splice(si, 1)[0];
+  }
+  let idx = 0;
+  counts.forEach((c, i) => {
+    const give = solo && !soloPlaced && c >= 3;
+    const take = give ? c - 1 : c;
+    for(let k = 0; k < take; k++) holes[i].teams.push(order[idx++]);
+    if(give){ holes[i].teams.push(solo); soloPlaced = true; }
+  });
+  return holes.filter(h => h.teams.length > 0);
+}
+
+function teamLabel(t){
+  return t.length === 1 ? `${t[0]} (own ball)` : `${t[0]} + ${t[1]}`;
+}
+
+/* =========================================================================
+   SUPABASE DATA LAYER
+   ========================================================================= */
+function configured(){
+  return SUPABASE_URL.startsWith('https://') && !SUPABASE_ANON_KEY.startsWith('PASTE');
+}
+
+async function loadPlayers(){
+  const {data, error} = await sb.from('players').select('id,name').order('name');
+  if(error) throw error;
+  players = data || [];
+  // prune attendee selections for players that no longer exist
+  const ids = new Set(players.map(p => p.id));
+  attendeeIds = new Set([...attendeeIds].filter(id => ids.has(id)));
+}
+
+async function addPlayer(name){
+  const {data, error} = await sb.from('players').insert({name}).select('id,name').single();
+  if(error) throw error;
+  players.push(data);
+  attendeeIds.add(data.id);        // new arrivals are here — mark attending locally
+}
+
+async function deletePlayer(id){
+  const {error} = await sb.from('players').delete().eq('id', id);
+  if(error) throw error;
+  players = players.filter(p => p.id !== id);
+  attendeeIds.delete(id);
+}
+
+async function loadHistory(){
+  const {data, error} = await sb.from('pairing_history')
+    .select('id,week_date,pairs,created_at')
+    .order('created_at', {ascending:false})
+    .limit(20);
+  if(error) throw error;
+  historyRows = data || [];
+  // rebuild last-week block list from the most recent entry
+  lastWeekPairs = {};
+  const latest = historyRows[0];
+  if(latest && Array.isArray(latest.pairs)){
+    latest.pairs.forEach(h => (h.teams || []).forEach(t => {
+      if(t.length === 2) lastWeekPairs[pairKey(t[0], t[1])] = true;
+    }));
+  }
+}
+
+async function saveWeek(){
+  const payload = {
+    week_date: new Date().toISOString().slice(0, 10),
+    pairs: currentCard
+  };
+  const {error} = await sb.from('pairing_history').insert(payload);
+  if(error) throw error;
+}
+
+async function deleteWeek(id){
+  const {error} = await sb.from('pairing_history').delete().eq('id', id);
+  if(error) throw error;
+}
+
+/* =========================================================================
+   RENDERING
+   ========================================================================= */
+function renderPlayers(filter){
+  const list = $('playerList');
+  const f = (filter || '').trim().toLowerCase();
+  const visible = players.filter(p => p.name.toLowerCase().includes(f));
+
+  const addRow = $('addRow');
+  addRow.innerHTML = '';
+  const typed = (filter || '').trim();
+  if(typed && !players.some(p => p.name.toLowerCase() === f)){
+    const b = document.createElement('button');
+    b.className = 'btn secondary';
+    b.style.width = '100%'; b.style.marginTop = '10px'; b.style.textAlign = 'left';
+    b.textContent = `＋ Add "${typed}" to the shared roster`;
+    b.addEventListener('click', () => onAdd(typed));
+    addRow.appendChild(b);
+  }
+
+  list.innerHTML = '';
+  visible.forEach(p => {
+    const cell = document.createElement('div');
+    cell.className = 'pcell';
+    const btn = document.createElement('button');
+    btn.className = 'pbtn' + (attendeeIds.has(p.id) ? ' sel' : '');
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => {
+      const searching = $('playerBox').value.trim().length > 0;
+      if(searching){
+        attendeeIds.add(p.id);
+        $('playerBox').value = '';
+        renderPlayers('');
+        toast(`${p.name} marked attending.`);
+      } else {
+        if(attendeeIds.has(p.id)) attendeeIds.delete(p.id); else attendeeIds.add(p.id);
+        renderPlayers('');
+      }
+    });
+    const x = document.createElement('button');
+    x.className = 'xbtn'; x.textContent = '✕'; x.title = `Remove ${p.name} (all devices)`;
+    x.addEventListener('click', async () => {
+      if(!confirm(`Remove ${p.name} from the shared roster on ALL devices?`)) return;
+      try{ setBusy(true); await deletePlayer(p.id); renderPlayers($('playerBox').value); toast(`${p.name} removed.`); }
+      catch(e){ toast('Delete failed — check connection.'); }
+      finally{ setBusy(false); }
+    });
+    cell.appendChild(btn); cell.appendChild(x);
+    list.appendChild(cell);
+  });
+  $('countBadge').textContent = `${players.length} players · ${attendeeIds.size} attending`;
+}
+
+function renderResults(){
+  const area = $('results');
+  area.innerHTML = '';
+  if(currentCard.length === 0){
+    area.innerHTML = '<p class="small-note">No pairings yet.</p>';
+  } else {
+    currentCard.forEach(h => {
+      const line = document.createElement('div');
+      line.className = 'result-line';
+      const b = document.createElement('b');
+      b.textContent = `Hole ${h.hole}: `;
+      line.appendChild(b);
+      line.appendChild(document.createTextNode(h.teams.map(teamLabel).join(' vs ')));
+      area.appendChild(line);
+    });
+  }
+  $('saveWeekBtn').disabled = currentCard.length === 0;
+}
+
+function renderHistory(){
+  const area = $('historyArea');
+  area.innerHTML = '';
+  if(historyRows.length === 0){
+    area.innerHTML = '<p class="small-note">No weeks saved yet.</p>';
+    return;
+  }
+  historyRows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'hist';
+    const hd = document.createElement('div');
+    hd.className = 'hd';
+    const l = document.createElement('span');
+    l.textContent = row.week_date || (row.created_at || '').slice(0,10);
+    const r = document.createElement('span');
+    r.textContent = new Date(row.created_at).toLocaleString();
+    hd.appendChild(l); hd.appendChild(r);
+    div.appendChild(hd);
+    (row.pairs || []).forEach(h => {
+      const line = document.createElement('div');
+      line.textContent = `Hole ${h.hole}: ${(h.teams || []).map(teamLabel).join(' vs ')}`;
+      div.appendChild(line);
+    });
+    const del = document.createElement('button');
+    del.className = 'btn ghost'; del.style.marginTop = '6px'; del.textContent = 'Delete week';
+    del.addEventListener('click', async () => {
+      if(!confirm('Delete this saved week for all devices?')) return;
+      try{ setBusy(true); await deleteWeek(row.id); await loadHistory(); renderHistory(); toast('Week deleted.'); }
+      catch(e){ toast('Delete failed.'); }
+      finally{ setBusy(false); }
+    });
+    div.appendChild(del);
+    area.appendChild(div);
+  });
+}
+
+/* =========================================================================
+   ACTIONS
+   ========================================================================= */
+async function onAdd(name){
+  name = name.trim();
+  if(!name) return;
+  if(players.some(p => p.name.toLowerCase() === name.toLowerCase())){
+    toast('Already on the roster.');
+    return;
+  }
+  try{
+    setBusy(true); setStatus('Saving player…');
+    await addPlayer(name);
+    $('playerBox').value = '';
+    renderPlayers('');
+    setStatus('Saved.'); toast(`Added ${name}.`);
+  }catch(e){
+    setStatus('Could not save player — check connection.', true);
+    toast('Save failed.');
+  }finally{ setBusy(false); }
+}
+
+function onGenerate(mode){
+  const names = players.filter(p => attendeeIds.has(p.id)).map(p => p.name);
+  if(names.length < 2){ toast('Select at least 2 attendees.'); return; }
+  const teams = formTeams(names, mode);
+  currentCard = assignToHoles(teams);
+  renderResults();
+  const reps = teams.filter(t => t.length === 2 && wasLastWeek(t[0], t[1])).length;
+  toast(reps === 0 ? 'Pairings ready — no repeats from last week.'
+                   : `Pairings ready — ${reps} repeat(s) unavoidable.`);
+}
+
+async function onSaveWeek(){
+  if(currentCard.length === 0) return;
+  try{
+    setBusy(true); setStatus('Saving week…');
+    await saveWeek();
+    await loadHistory();
+    renderHistory();
+    setStatus('Week saved to the shared history.');
+    toast('Week saved — visible on every device.');
+  }catch(e){
+    setStatus('Save failed — check connection.', true);
+    toast('Save failed.');
+  }finally{ setBusy(false); }
+}
+
+async function syncNow(showToast){
+  try{
+    setBusy(true); setStatus('Syncing…');
+    await Promise.all([loadPlayers(), loadHistory()]);
+    renderPlayers($('playerBox').value);
+    renderHistory();
+    setStatus(`Synced ${new Date().toLocaleTimeString()} — ${players.length} players, ${historyRows.length} saved week(s).`);
+    if(showToast) toast('Up to date.');
+  }catch(e){
+    setStatus('Sync failed — check your connection and Supabase keys.', true);
+    if(showToast) toast('Sync failed.');
+  }finally{ setBusy(false); }
+}
+
+async function loadLatest(){
+  await syncNow(false);
+  const latest = historyRows[0];
+  if(latest && Array.isArray(latest.pairs)){
+    currentCard = latest.pairs;
+    renderResults();
+    toast(`Loaded the latest saved card (${latest.week_date || 'undated'}).`);
+  } else {
+    toast('No saved weeks to load yet.');
+  }
+}
+
+/* ---------------- Auth (optional with public tables) ---------------- */
+async function refreshAuthUI(){
+  const {data} = await sb.auth.getSession();
+  const session = data && data.session;
+  $('authForms').hidden = !!session;
+  $('authState').hidden = !session;
+  if(session){
+    const u = session.user;
+    $('whoAmI').textContent = u.email ? `Signed in as ${u.email}` : 'Signed in anonymously';
+  }
+}
+async function doAuth(kind){
+  const email = $('authEmail').value.trim();
+  const pass = $('authPass').value;
+  try{
+    let res;
+    if(kind === 'up')       res = await sb.auth.signUp({email, password: pass});
+    else if(kind === 'in')  res = await sb.auth.signInWithPassword({email, password: pass});
+    else                    res = await sb.auth.signInAnonymously();
+    if(res.error) throw res.error;
+    toast(kind === 'up' ? 'Account created — check your email to confirm.' : 'Signed in.');
+    refreshAuthUI();
+  }catch(e){
+    toast(e.message || 'Auth failed.');
+  }
+}
+
+/* ---------------- Init ---------------- */
+function bind(){
+  $('playerBox').addEventListener('input', e => renderPlayers(e.target.value));
+  $('playerBox').addEventListener('keydown', e => {
+    if(e.key !== 'Enter') return;
+    const text = $('playerBox').value.trim();
+    if(!text) return;
+    const f = text.toLowerCase();
+    const matches = players.filter(p => p.name.toLowerCase().includes(f));
+    if(matches.length === 1){
+      attendeeIds.add(matches[0].id);
+      $('playerBox').value = '';
+      renderPlayers('');
+      toast(`${matches[0].name} marked attending.`);
+    } else if(!players.some(p => p.name.toLowerCase() === f)){
+      onAdd(text);
+    }
+  });
+  $('selAll').addEventListener('click', () => { players.forEach(p => attendeeIds.add(p.id)); renderPlayers($('playerBox').value); });
+  $('selNone').addEventListener('click', () => { attendeeIds.clear(); renderPlayers($('playerBox').value); });
+  $('genFresh').addEventListener('click', () => onGenerate('fresh'));
+  $('genRandom').addEventListener('click', () => onGenerate('random'));
+  $('saveWeekBtn').addEventListener('click', onSaveWeek);
+  $('syncBtn').addEventListener('click', () => syncNow(true));
+  $('loadLatestBtn').addEventListener('click', loadLatest);
+  $('signInBtn').addEventListener('click', () => doAuth('in'));
+  $('signUpBtn').addEventListener('click', () => doAuth('up'));
+  $('anonBtn').addEventListener('click', () => doAuth('anon'));
+  $('signOutBtn').addEventListener('click', async () => { await sb.auth.signOut(); refreshAuthUI(); toast('Signed out.'); });
+}
+
+async function init(){
+  if(!configured() || typeof supabase === 'undefined'){
+    $('setupWarn').hidden = false;
+    setStatus('Waiting for Supabase configuration.', true);
+    bind();
+    return;
+  }
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  bind();
+  refreshAuthUI();
+  await syncNow(false);   // initial load: players + history from the shared database
+}
+
+init();
+</script>
+</body>
+</html>
