@@ -1189,8 +1189,9 @@ function saveWeekToHistory(){
         entry.dbId = data.id;
         toast(`Saved "${entry.label}" — visible on every device.`);
       })
-      .catch(() => {
-        setSyncStatus('Week saved on this device only — press Sync Now to push it.', true);
+      .catch(err => {
+        console.error('Week push error:', err);
+        setSyncStatus(`Week saved on this device only — ${errText(err)}. Run setup-rich-sync.sql if a column is missing, then press Sync Now.`, true);
         toast(`Saved "${entry.label}" (device only for now).`);
       });
   } else {
@@ -1713,6 +1714,10 @@ let syncOnline = false;
 function cloudConfigured(){
   return SUPABASE_URL.startsWith('https://') && !SUPABASE_ANON_KEY.startsWith('PASTE');
 }
+function errText(e){
+  if(!e) return 'unknown error';
+  return e.message || e.details || e.hint || e.error_description || String(e);
+}
 function setSyncStatus(msg, isErr){
   const el = $('syncStatus');
   if(!el) return;
@@ -1745,7 +1750,7 @@ function dbRowToEntry(row){
 async function dbLoadAll(){
   const [pl, hist, set] = await Promise.all([
     sb.from('players').select('id,name').order('name'),
-    sb.from('pairing_history').select('id,week_date,label,pairs,notes,attendees,created_at')
+    sb.from('pairing_history').select('*')          // '*' tolerates missing optional columns
       .order('created_at', {ascending:false}).limit(100),
     sb.from('settings').select('data').eq('id', 1).maybeSingle()
   ]);
@@ -1864,8 +1869,9 @@ async function syncNow(userInitiated){
     setSyncStatus(`Synced ${new Date().toLocaleTimeString()} \u2014 ${players.length} players, ${weeklyHistory.length} saved week(s).`);
     if(userInitiated) toast('Up to date with the shared database.');
   }catch(e){
-    setSyncStatus('Sync failed \u2014 running on this device’s data. Check connection and keys.', true);
-    if(userInitiated) toast('Sync failed.');
+    console.error('Sync error:', e);
+    setSyncStatus(`Sync failed — ${errText(e)}. If this mentions a missing column or table, run setup-rich-sync.sql in Supabase.`, true);
+    if(userInitiated) toast('Sync failed — see the Sync card for the reason.');
   }
 }
 
@@ -2414,7 +2420,8 @@ async function init(){
       return;
     }catch(e){
       syncOnline = false;
-      setSyncStatus('Couldn’t reach the database — running from this device’s saved data. Press Sync Now to retry.', true);
+      console.error('Initial cloud load error:', e);
+      setSyncStatus(`Couldn’t load the database — ${errText(e)}. Running from this device’s saved data; press Sync Now to retry. If this mentions a missing column or table, run setup-rich-sync.sql.`, true);
     }
   } else if(cloudConfigured()){
     setSyncStatus('Cloud script didn’t load (offline?) — device data only. Reload when connected.', true);
