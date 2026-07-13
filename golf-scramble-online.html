@@ -109,6 +109,7 @@ button{font-family:inherit;}
   position:fixed; inset:0; z-index:200; background:var(--fairway-deep);
   display:flex; align-items:center; justify-content:center; padding:20px;
 }
+#loginOverlay[hidden]{display:none !important;}   /* hidden must beat display:flex */
 @media (prefers-color-scheme: dark){ #loginOverlay{background:#1c3529;} }
 .login-card{
   background:var(--card); border:1px solid var(--tee); border-radius:12px;
@@ -606,13 +607,14 @@ const APP_PASSWORD = "chipoff";
   var pass = document.getElementById('loginPass');
   var KEY = 'mccScrambleAuth.v1';
   var token = APP_USERNAME + '|' + APP_PASSWORD;
+  function hide(){ overlay.hidden = true; overlay.style.display = 'none'; }
   var authed = false;
   try{ authed = localStorage.getItem(KEY) === token; }catch(e){}
-  if(authed){ overlay.hidden = true; return; }
+  if(authed){ hide(); return; }
   function attempt(){
     if(user.value.trim().toLowerCase() === APP_USERNAME.toLowerCase() && pass.value === APP_PASSWORD){
       try{ localStorage.setItem(KEY, token); }catch(e){}
-      overlay.hidden = true;
+      hide();
     } else {
       document.getElementById('loginErr').textContent = 'Wrong username or password.';
       pass.value = '';
