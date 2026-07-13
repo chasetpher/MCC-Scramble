@@ -93,7 +93,74 @@ button{font-family:inherit;}
 #todayDate{font-size:.84rem; margin-top:10px; opacity:.95;}
 @media (prefers-color-scheme: dark){ .masthead{color:#e8ece7;} }
 
-main{max-width:780px; margin:18px auto 0; padding:0 12px;}
+/* In dark mode --fairway-deep flips to a LIGHT accent green, which is right
+   for borders/text but wrong as a backdrop for cream text. Keep the green
+   "surfaces" deep so the lettering stays readable. */
+@media (prefers-color-scheme: dark){
+  .masthead{background:#1c3529;}
+  #sideNav{background:#122820;}
+  .nav-item{color:#e8ece7;}
+  #floatBtns button{background:#1c3529; color:#e8ece7;}
+  .hole-head{background:linear-gradient(to right, #2a4d3a, #1c3529); color:#e8ece7;}
+}
+
+/* ---------- App shell: left nav rail + content ---------- */
+.appbody{display:flex; align-items:stretch; max-width:none; margin:0;}
+#sideNav{
+  flex:0 0 48px; background:#163a28; padding:6px 0 24px;
+  border-right:4px double var(--tee);
+  position:sticky; top:0; align-self:flex-start;
+  height:100vh; overflow-y:auto;
+}
+body.nav-open #sideNav{flex:0 0 190px; padding-top:6px;}
+#navToggle{
+  display:block; width:100%; background:transparent; border:none;
+  color:#f4f1e6; font-size:1.35rem; padding:10px 0 14px; cursor:pointer;
+  opacity:.85; text-align:center;
+}
+body.nav-open #navToggle{text-align:right; padding-right:16px;}
+#navToggle:hover{opacity:1;}
+.nav-item .nav-label{display:none;}
+body.nav-open .nav-item .nav-label{display:inline; margin-left:9px;}
+#sideNav .nav-item{text-align:center; padding:13px 0; font-size:1.15rem;}
+body.nav-open #sideNav .nav-item{text-align:left; padding:13px 18px; font-size:.95rem;}
+.nav-item{
+  display:block; width:100%; text-align:left; background:transparent; border:none;
+  color:#f4f1e6; opacity:.78; font-family:Georgia,'Times New Roman',serif;
+  font-size:.95rem; letter-spacing:.08em; padding:13px 18px; cursor:pointer;
+  border-left:4px solid transparent;
+}
+.nav-item:hover{opacity:1; background:rgba(255,255,255,.06);}
+.nav-item.active{
+  opacity:1; background:rgba(255,255,255,.1); border-left-color:var(--tee);
+  font-weight:700;
+}
+main{flex:1; min-width:0; margin:18px 0 0; padding:0 18px;}
+.view{display:none;}
+.view.active{display:block; max-width:780px; margin:0 auto;}
+#view-checkin.active{max-width:1240px;}   /* wide roster = more columns, no scrolling */
+@media(max-width:760px){
+  .appbody{display:block;}
+  #sideNav{
+    display:flex; overflow-x:auto; overflow-y:hidden; border-right:none;
+    border-bottom:3px double var(--tee); padding:0;
+    position:sticky; top:0; z-index:40;
+    height:auto; align-self:auto;
+  }
+  .nav-item{
+    flex:0 0 auto; width:auto; border-left:none; border-bottom:4px solid transparent;
+    padding:12px 14px; font-size:.85rem; white-space:nowrap;
+  }
+  .nav-item.active{border-left:none; border-bottom-color:var(--tee);}
+  #navToggle{width:auto; flex:0 0 auto; padding:8px 16px;}
+  body.nav-open #navToggle{text-align:center; padding-right:16px;}
+  #sideNav .nav-item, body.nav-open #sideNav .nav-item{
+    display:inline-flex; align-items:center; text-align:center;
+    padding:10px 13px; font-size:1.05rem;
+  }
+  body.nav-open #sideNav .nav-item{font-size:.85rem;}
+  #sideNav, body.nav-open #sideNav{flex-basis:auto; height:auto; padding:0;}
+}
 
 /* ---------- Cards with scorecard "eyebrow" headers ---------- */
 .card{
@@ -139,7 +206,23 @@ button.btn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
 @media (prefers-color-scheme: dark){ button.btn{color:#10160f;} }
 
 .small-note{font-size:.76rem; color:var(--muted); margin-top:8px;}
-.count-badge{font-size:.78rem; color:var(--muted); font-variant-numeric:tabular-nums;}
+.count-badge{
+  font-family:Georgia,serif; font-size:1.35rem; font-weight:700;
+  color:var(--fairway); letter-spacing:.02em; font-variant-numeric:tabular-nums;
+}
+/* CHECK-IN page: heading and roster count share the same scale */
+#view-checkin .card > h2.eyebrow{
+  font-family:Georgia,serif; font-size:1.35rem; font-weight:700;
+  letter-spacing:.06em; color:var(--fairway);
+}
+.roster-tools{
+  margin-top:26px; border-top:1px dashed var(--tee-soft); padding-top:10px;
+}
+.roster-tools > summary{
+  cursor:pointer; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); user-select:none; width:max-content;
+}
+.roster-tools > summary:hover{color:var(--fairway);}
 .preview-line{font-size:.82rem; color:var(--fairway); font-weight:600; margin-top:6px; min-height:1.2em;}
 .preview-line.warn{color:var(--flag);}
 
@@ -158,6 +241,10 @@ button.btn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
 .player-select.selected{background:var(--fairway); color:#fff; border-color:var(--fairway-deep); font-weight:600;}
 @media (prefers-color-scheme: dark){ .player-select.selected{color:#10160f;} }
 @media (prefers-reduced-motion: reduce){ .player-select{transition:none;} }
+/* Roster edit mode: the per-player ✕ only exists while editing */
+#playerGrid .del-btn{display:none;}
+body.roster-edit #playerGrid .del-btn{display:inline-block;}
+.edit-roster-on{background:var(--flag) !important; color:#fff !important; border-color:var(--flag) !important;}
 .del-btn{
   flex:0 0 auto; background:none; border:1px solid transparent; color:var(--muted);
   font-size:.8rem; cursor:pointer; padding:0 7px; border-radius:6px;
@@ -290,6 +377,31 @@ input[type=number]{
 .payout-row.place .amount{color:var(--fairway); font-size:1rem;}
 .payout-row.pool{border-top:2px solid var(--tee);}
 
+/* ---------- Couples tournament ---------- */
+.couple-row{display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px dashed var(--tee-soft);}
+.couple-name{flex:1; font-size:.92rem; min-width:0;}
+.flight-badge{
+  flex:0 0 auto; border:1px solid var(--fairway); background:transparent; color:var(--fairway);
+  border-radius:6px; font-size:.72rem; font-weight:700; padding:5px 10px; cursor:pointer;
+  letter-spacing:.06em;
+}
+.flight-badge.fB{border-color:#8a6d1d; color:#8a6d1d;}
+.flight-badge.fC{border-color:var(--flag); color:var(--flag);}
+.couples-warn{font-size:.8rem; color:var(--flag); font-weight:600; margin:6px 0;}
+.btn.ghost.day-active{background:var(--fairway); color:#fff; border-color:var(--fairway);}
+body.print-couples .card:not(#couplesCard){display:none !important;}
+body.print-couples #couplesCard{display:block !important;}
+body.print-couples #floatBtns, body.print-couples #tvBoard{display:none !important;}
+@media print{
+  body.print-couples #couplesCard input,
+  body.print-couples #couplesCard .btn-group,
+  body.print-couples #couplesCard .score-btn,
+  body.print-couples #couplesCard .del-btn,
+  body.print-couples #couplesCard .flight-badge{pointer-events:none;}
+  body.print-couples #couplesCard .btn-group{display:none !important;}
+  #sideNav{display:none !important;}
+}
+
 /* ---------- Inline add-player ---------- */
 .add-inline{
   width:100%; margin-top:12px; text-align:left; border:1.5px dashed var(--fairway);
@@ -312,6 +424,7 @@ input[type=number]{
 
 body.tv-mode{font-size:19px; overflow-x:hidden;}
 body.tv-mode main{display:none;}
+body.tv-mode #sideNav{display:none !important;}
 body.tv-mode #tvBoard{display:grid;}
 
 #tvBoard{
@@ -457,94 +570,65 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
   <div id="mastPayout" class="no-print"></div>
 </header>
 
+<div class="appbody">
+
+<aside id="sideNav" class="no-print">
+  <button type="button" id="navToggle" title="Menu">☰</button>
+  <button type="button" class="nav-item" id="nav-checkin" title="Check-In"><span class="nav-ico">✅</span><span class="nav-label">Check-In</span></button>
+  <button type="button" class="nav-item" id="nav-pairings" title="Pairings"><span class="nav-ico">🎲</span><span class="nav-label">Pairings</span></button>
+  <button type="button" class="nav-item" id="nav-couples" title="Couples"><span class="nav-ico">💑</span><span class="nav-label">Couples</span></button>
+  <button type="button" class="nav-item" id="nav-season" title="Season"><span class="nav-ico">🏆</span><span class="nav-label">Season</span></button>
+  <button type="button" class="nav-item" id="nav-settings" title="Settings"><span class="nav-ico">⚙️</span><span class="nav-label">Settings</span></button>
+</aside>
+
 <main>
 
-  <!-- ============ ROSTER & ATTENDEES ============ -->
-  <details class="card no-print" open>
-    <summary>Roster &amp; Check-In</summary>
+<div class="view" id="view-checkin">
+  <!-- ============ ROSTER & CHECK-IN (its own page) ============ -->
+  <section class="card no-print">
+    <h2 class="eyebrow">CHECK-IN</h2>
 
     <label for="playerBox">Find or add a player</label>
     <input type="search" id="playerBox" placeholder="Type a name — matches filter below, new names can be added" autocomplete="off">
 
     <div class="row" style="margin-top:10px; justify-content:space-between;">
-      <span class="count-badge" id="countBadge">0 players · 0 attending</span>
+      <span class="count-badge" id="countBadge">ROSTER - 0 Players Attending</span>
     </div>
-    <div class="btn-group" style="margin-top:8px;">
-      <button class="btn ghost" id="selectAllBtn">Select all</button>
-      <button class="btn ghost" id="selectNoneBtn">Select none</button>
-      <button class="btn danger" id="removeAllBtn" disabled>Remove all players</button>
-    </div>
-    <p class="small-note">Check-in flow: type a few letters, then tap the name (or press Enter on a single match) — they're marked attending and the box clears for the next name. Unknown names get an "Add" option and join as attending. With the box empty, tapping a chip toggles it, so tap a green name to unselect. The ✕ removes a player from the roster.</p>
-
     <div id="addRow"></div>
     <div class="roster-grid" id="playerGrid"></div>
-  </details>
 
+    <details class="roster-tools">
+      <summary>Roster tools</summary>
+      <div class="btn-group">
+        <button class="btn ghost" id="editRosterBtn">✏️ Edit roster</button>
+        <button class="btn ghost" id="selectAllBtn">Select all</button>
+        <button class="btn ghost" id="selectNoneBtn">Select none</button>
+        <button class="btn danger" id="removeAllBtn" disabled>Remove all players</button>
+      </div>
+      <p class="small-note">Bulk actions — tucked away so a check-in tap can't hit them by accident. "Edit roster" reveals a ✕ on each player for removing them; tap it again when you're done.</p>
+    </details>
+  </section>
+</div>
+
+<div class="view" id="view-settings">
   <!-- ============ COURSE SETUP ============ -->
-  <details class="card no-print">
-    <summary>Course Setup — Holes in Play</summary>
+  <section class="card no-print">
+    <h2 class="eyebrow">Course Setup — Holes in Play</h2>
     <p class="small-note" style="margin-top:0;">Tap a hole number to put it in or out of play for team tees (green = in play). Tap the par label to cycle it 3 → 4 → 5. Par 3s can be used too — just switch them on. The setup is saved in your season file.</p>
     <div class="hole-grid" id="holeGrid"></div>
     <p class="preview-line" id="holesSummary" style="margin-top:10px;"></p>
-  </details>
-
-  <!-- ============ GENERATE ============ -->
-  <details class="card no-print" open>
-    <summary>Make the Pairings</summary>
-    <div class="btn-group" style="margin-top:0;">
-      <button class="btn" id="genBalancedBtn">⚖️ Generate — fresh partners</button>
-      <button class="btn secondary" id="genScoredBtn">🎯 Generate — score-balanced</button>
-      <button class="btn secondary" id="genRandomBtn">🎲 Generate — fully random</button>
-    </div>
-    <p class="preview-line" id="previewLine"></p>
-    <p class="small-note">Everyone gets one partner for the whole round; no one appears on two holes. Only holes switched on in Course Setup are used for team tees. Each hole takes 2 teams; bigger groups add a 3rd team spread across as many holes as needed (max 3 per hole). An odd player plays their own ball and is placed on a 3-team hole whenever one exists. "Fresh partners" only avoids repeating last week’s pairings — after a week apart, two players can be drawn together again. "Score-balanced" pairs last week’s low rounds with high rounds (season average as fallback) so teams start out even — the bottom-half partner is drawn randomly, still steering around repeats.</p>
-  </details>
-
-  <!-- ============ SCORECARD / RESULTS ============ -->
-  <section class="card" id="resultsCard">
-    <h2 class="eyebrow">This Week's Card</h2>
-    <div id="resultsArea"><p class="empty-msg">No pairings yet — pick attendees above and hit Generate.</p></div>
   </section>
-
-  <!-- ============ PAYOUTS ============ -->
-  <section class="card" id="payoutCard">
-    <h2 class="eyebrow">Payouts</h2>
-    <div class="row payout-inputs no-print">
-      <div style="flex:0 1 220px;">
-        <label for="payoutBuyin">Buy-in per player ($)</label>
-        <input type="number" id="payoutBuyin" min="0" step="1" value="7" inputmode="decimal">
-      </div>
-    </div>
-    <div id="payoutBreakdown"></div>
-    <p class="small-note no-print">Player count comes straight from check-in — everyone marked attending is assumed to have paid (collected manually). MGA money comes off the top: $2 × players. Under 30 players pays 2 places (60/40); over 30 pays 3 places (50/30/20).</p>
-  </section>
-
   <!-- ============ SPONSORS ============ -->
-  <details class="card no-print">
-    <summary>Sponsors</summary>
+  <section class="card no-print" id="sponsorCard">
+    <h2 class="eyebrow">Sponsors</h2>
     <label for="sponsorsBox">Sponsors shown on the dashboard (one per line — use "Name | tagline" for an optional second line)</label>
     <textarea id="sponsorsBox" rows="4" placeholder="Smith's Hardware | Proud MGA supporter&#10;River Valley Bank&#10;Joe's BBQ | Post-round plates half off Wednesdays"></textarea>
     <p class="small-note">These appear in a sponsor strip along the bottom of the dashboard, and they're saved in your season file.</p>
-  </details>
-
-  <!-- ============ SEASON: STANDINGS + WEEKLY HISTORY ============ -->
-  <details class="card no-print" id="seasonCard">
-    <summary>Season — Standings &amp; Weekly History</summary>
-
-    <div id="standingsArea"></div>
-
-    <div class="btn-group">
-      <button class="btn ghost" id="exportHistoryCsvBtn">Export history CSV</button>
-      <button class="btn danger" id="clearHistoryBtn">Clear history</button>
-    </div>
-    <p class="small-note">Every card you save lands here. Standings count a "win" as being on the lowest round of the week. Pairing avoidance looks only at the most recent saved week — last week’s partners are kept apart, everyone else is fair game.</p>
-
-    <div id="historyArea" style="margin-top:12px;"><p class="empty-msg">No weeks saved yet — save a card after the round to start the season log.</p></div>
-  </details>
+  </section>
 
   <!-- ============ SAVE / LOAD / SYNC ============ -->
-  <details class="card no-print">
-    <summary>Save, Load &amp; Sync</summary>
+  <section class="card no-print">
+    <h2 class="eyebrow">Save, Load &amp; Sync</h2>
     <div class="btn-group" style="margin-top:0;">
       <button class="btn" id="syncNowBtn">🔄 Sync Now</button>
     </div>
@@ -566,9 +650,99 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
     <p class="small-note">Roster CSV is one name per line — handy for bulk-adding the league.</p>
     <input type="file" id="fileLoadSeason" accept=".json,application/json" hidden>
     <input type="file" id="fileImportRoster" accept=".csv,text/csv,text/plain" hidden>
-  </details>
+  </section>
+</div>
+
+<div class="view" id="view-pairings">
+  <!-- ============ GENERATE ============ -->
+  <section class="card no-print">
+    <h2 class="eyebrow">Make the Pairings</h2>
+    <div class="btn-group" style="margin-top:0;">
+      <button class="btn" id="genBalancedBtn">⚖️ Generate — fresh partners</button>
+      <button class="btn secondary" id="genScoredBtn">🎯 Generate — score-balanced</button>
+      <button class="btn secondary" id="genRandomBtn">🎲 Generate — fully random</button>
+    </div>
+    <p class="preview-line" id="previewLine"></p>
+    <p class="small-note">Everyone gets one partner for the whole round; no one appears on two holes. Only holes switched on in Course Setup are used for team tees. Each hole takes 2 teams; bigger groups add a 3rd team spread across as many holes as needed (max 3 per hole). An odd player plays their own ball and is placed on a 3-team hole whenever one exists — and never draws their own ball two weeks in a row. "Fresh partners" only avoids repeating last week’s pairings — after a week apart, two players can be drawn together again. "Score-balanced" pairs last week’s low rounds with high rounds (season average as fallback) so teams start out even — the bottom-half partner is drawn randomly, still steering around repeats.</p>
+  </section>
+
+  <!-- ============ SCORECARD / RESULTS ============ -->
+  <section class="card" id="resultsCard">
+    <h2 class="eyebrow">This Week's Card</h2>
+    <div id="resultsArea"><p class="empty-msg">No pairings yet — pick attendees above and hit Generate.</p></div>
+  </section>
+
+  <!-- ============ PAYOUTS ============ -->
+  <section class="card" id="payoutCard">
+    <h2 class="eyebrow">Payouts</h2>
+    <div class="row payout-inputs no-print">
+      <div style="flex:0 1 220px;">
+        <label for="payoutBuyin">Buy-in per player ($)</label>
+        <input type="number" id="payoutBuyin" min="0" step="1" value="7" inputmode="decimal">
+      </div>
+    </div>
+    <div id="payoutBreakdown"></div>
+    <p class="small-note no-print">Player count comes straight from check-in — everyone marked attending is assumed to have paid (collected manually). MGA money comes off the top: $2 × players. Under 30 players pays 2 places (60/40); over 30 pays 3 places (50/30/20).</p>
+  </section>
+</div>
+
+<div class="view" id="view-couples">
+  <!-- ============ COUPLES TOURNAMENT (18-HOLE SHOTGUN) ============ -->
+  <section class="card" id="couplesCard">
+    <h2 class="eyebrow">Couples Tournament — Two-Day 18-Hole Shotgun</h2>
+
+    <label for="coupName">Event name</label>
+    <input type="text" id="coupName" placeholder="e.g. Fall Couples Classic 2026">
+
+    <label style="margin-top:12px;">Register a couple (they play as a fixed pair)</label>
+    <div class="row">
+      <input type="text" id="coupA" placeholder="Partner 1" style="flex:1; min-width:120px;" autocomplete="off">
+      <input type="text" id="coupB" placeholder="Partner 2" style="flex:1; min-width:120px;" autocomplete="off">
+      <button class="btn" id="addCoupleBtn" style="flex:0 0 auto;">Add</button>
+    </div>
+    <p class="small-note">Tap a couple's flight badge to cycle it A → B → C — flights split the field by skill and results are ranked within each flight. It's a two-day event: pick Day 1 or Day 2, draw that day's shotgun holes (two couples per hole, same flight together wherever possible, across holes 1–18; an odd couple gets their own hole as a twosome), and enter that day's scores on the sheet. Flights rank by the two-day total.</p>
+
+    <div id="couplesList" style="margin-top:10px;"></div>
+
+    <div class="btn-group">
+      <button class="btn ghost" id="dayBtn1">Day 1</button>
+      <button class="btn ghost" id="dayBtn2">Day 2</button>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn" id="assignCouplesBtn">🔀 Assign Starting Holes</button>
+      <button class="btn ghost" id="printCouplesBtn">🖨 Print sheet</button>
+      <button class="btn danger" id="clearCouplesBtn">Clear tournament</button>
+    </div>
+
+    <div id="couplesAssignArea" style="margin-top:12px;"></div>
+    <div id="couplesFlightsArea" style="margin-top:12px;"></div>
+    <p class="small-note no-print">The tournament syncs to the shared database with your other settings — every device sees the same couples, holes, and scores.</p>
+  </section>
+</div>
+
+<div class="view" id="view-season">
+  <!-- ============ SEASON: STANDINGS + WEEKLY HISTORY ============ -->
+  <section class="card no-print" id="seasonCard">
+    <h2 class="eyebrow">Season — Standings &amp; Weekly History</h2>
+
+    <div id="standingsArea"></div>
+
+    <div class="btn-group">
+      <button class="btn ghost" id="exportHistoryCsvBtn">Export history CSV</button>
+      <button class="btn danger" id="clearHistoryBtn">Clear history</button>
+    </div>
+    <p class="small-note">Every card you save lands here. Standings count a "win" as being on the lowest round of the week. Pairing avoidance looks only at the most recent saved week — last week’s partners are kept apart, everyone else is fair game.</p>
+
+    <div id="historyArea" style="margin-top:12px;"><p class="empty-msg">No weeks saved yet — save a card after the round to start the season log.</p></div>
+  </section>
+</div>
+
+
 
 </main>
+
+</div><!-- /appbody -->
 
 <div id="floatBtns" class="no-print">
   <button type="button" id="tvToggle">📺 Today's Matchups</button>
@@ -595,8 +769,8 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
    - anon public key:  the long key labeled "anon" / "public"
    Leave the placeholders as-is to run fully offline (no sync).
    ========================================================================= */
-const SUPABASE_URL      = "https://nyyruwihplbqoefzwunm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im55eXJ1d2locGxicW9lZnp3dW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2MjU3MTMsImV4cCI6MjA5OTIwMTcxM30.aGQfGSzIpEqpV2bX0vVjgKgSdrsLnq2QWVnGwlRDEDo";
+const SUPABASE_URL      = "PASTE-YOUR-PROJECT-URL-HERE";
+const SUPABASE_ANON_KEY = "PASTE-YOUR-ANON-PUBLIC-KEY-HERE";
 /* ========================================================================= */
 
 /* ---------------- Course setup ---------------- */
@@ -716,10 +890,16 @@ function pairKeyNames(a, b){
 function histCountNames(a, b){
   return pairHistory[pairKeyNames(a, b)] || 0;
 }
+let lastSoloNames = new Set();
+function wasSoloLastWeek(name){
+  return lastSoloNames.has(String(name).trim().toLowerCase());
+}
 function rebuildPairHistory(){
   // Only LAST week's pairings are blocked. After a week apart, two players
   // can be drawn together again. (weeklyHistory is newest-first.)
+  // Also remembers who played their own ball, so nobody draws it twice running.
   pairHistory = {};
+  lastSoloNames = new Set();
   const lastWeek = weeklyHistory[0];
   if(!lastWeek) return;
   (lastWeek.holes || []).forEach(h => {
@@ -727,6 +907,9 @@ function rebuildPairHistory(){
       if(t.players && t.players.length === 2){
         const k = pairKeyNames(t.players[0], t.players[1]);
         pairHistory[k] = (pairHistory[k] || 0) + 1;
+      }
+      if(t.players && t.players.length === 1){
+        lastSoloNames.add(String(t.players[0]).trim().toLowerCase());
       }
     });
   });
@@ -737,6 +920,19 @@ function rebuildPairHistory(){
    Balanced mode runs many shuffled greedy attempts and keeps the pairing
    with the fewest repeat partnerships from saved weeks.
    ========================================================================= */
+function fixSoloRepeat(teams){
+  if(!teams) return teams;
+  const solo = teams.find(t => t.type === 'solo');
+  if(!solo || !wasSoloLastWeek(solo.players[0].name)) return teams;
+  const pair = teams.find(t => t.type === 'pair' && t.players.some(p => !wasSoloLastWeek(p.name)));
+  if(!pair) return teams;
+  const mIdx = pair.players.findIndex(p => !wasSoloLastWeek(p.name));
+  const swapped = pair.players[mIdx];
+  pair.players[mIdx] = solo.players[0];   // last week's solo joins the pair
+  solo.players[0] = swapped;              // this teammate takes their own ball instead
+  return teams;
+}
+
 function greedyPair(pool){
   const teams = [];
   const p = pool.slice();
@@ -802,7 +998,13 @@ function formTeams(attendees, mode){
 
     let soloTeam = null;
     if(arr.length % 2 === 1){
-      soloTeam = {type:'solo', players:[arr.splice(Math.floor(arr.length / 2), 1)[0].p], score:0};
+      const mid = Math.floor(arr.length / 2);
+      let pickIdx = mid;
+      for(let off = 0; off < arr.length; off++){          // walk outward: mid, mid-1, mid+1, mid-2…
+        const idx = mid + (off % 2 === 1 ? -Math.ceil(off / 2) : Math.ceil(off / 2));
+        if(idx >= 0 && idx < arr.length && !wasSoloLastWeek(arr[idx].p.name)){ pickIdx = idx; break; }
+      }
+      soloTeam = {type:'solo', players:[arr.splice(pickIdx, 1)[0].p], score:0};
     }
     const half = arr.length / 2;
     const top = arr.slice(0, half).map(x => x.p);
@@ -821,7 +1023,7 @@ function formTeams(attendees, mode){
     }
     const teams = best || [];
     if(soloTeam) teams.push(soloTeam);
-    return teams;
+    return fixSoloRepeat(teams);
   }
   if(mode === 'random'){
     const pool = shuffle(attendees);
@@ -830,7 +1032,7 @@ function formTeams(attendees, mode){
       teams.push({type:'pair', players:[pool.shift(), pool.shift()], score:0});
     }
     if(pool.length === 1) teams.push({type:'solo', players:[pool[0]], score:0});
-    return teams;
+    return fixSoloRepeat(teams);
   }
   // balanced: 40 restarts, keep the least-repetitive pairing
   let best = null, bestKey = [Infinity, Infinity];
@@ -842,7 +1044,7 @@ function formTeams(attendees, mode){
       if(bestKey[0] === 0 && bestKey[1] === 0) break;   // perfect — all-new pairs
     }
   }
-  return best;
+  return fixSoloRepeat(best);
 }
 
 /* =========================================================================
@@ -1181,6 +1383,7 @@ function saveWeekToHistory(){
   weeklyHistory.unshift(entry);
   rebuildPairHistory();
   renderHistory();
+  renderCouples();
   $('seasonCard').open = true;
   if(syncOnline && sb){
     sb.from('pairing_history').insert(entryToDbPayload(entry)).select('id').single()
@@ -1241,6 +1444,7 @@ function deleteHistoryEntry(id){
   }
   rebuildPairHistory();
   renderHistory();
+  renderCouples();
   toast('Week removed from history.');
 }
 
@@ -1255,6 +1459,7 @@ function clearHistory(){
   }
   rebuildPairHistory();
   renderHistory();
+  renderCouples();
   toast('History cleared.');
 }
 
@@ -1544,7 +1749,7 @@ function renderPlayerGrid(filter){
 }
 
 function updateCountAndPreview(){
-  $('countBadge').textContent = `${players.length} players · ${attendeeIds.size} attending`;
+  $('countBadge').textContent = `ROSTER - ${attendeeIds.size} Players Attending`;
   $('removeAllBtn').disabled = !(players.length > 0 && attendeeIds.size === players.length);
 
   const n = attendeeIds.size;
@@ -1703,6 +1908,257 @@ function renderPayout(){
 }
 
 /* =========================================================================
+   COUPLES TOURNAMENT — fixed pairs, TWO-DAY 18-hole shotgun, flight-ranked
+   by two-day total. Synced through the shared settings row; device-cached.
+   ========================================================================= */
+let couplesEvent = null;   // set below via normalizeCouplesEvent
+let nextCoupleId = 1;
+
+function normalizeCouplesEvent(ev){
+  ev = ev || {};
+  const couples = (ev.couples || []).map(c => ({
+    id: c.id, a: c.a, b: c.b, flight: c.flight || 'A',
+    d1: c.d1 !== undefined ? c.d1 : (typeof c.score === 'number' ? c.score : null),  // migrate 1-day shape
+    d2: c.d2 !== undefined ? c.d2 : null
+  }));
+  let assignment = ev.assignment;
+  if(Array.isArray(assignment)) assignment = {1: assignment, 2: []};                 // migrate 1-day shape
+  assignment = assignment || {};
+  return {
+    name: ev.name || '',
+    day: ev.day === 2 ? 2 : 1,
+    couples,
+    assignment: {1: assignment[1] || [], 2: assignment[2] || []}
+  };
+}
+couplesEvent = normalizeCouplesEvent(null);
+
+function fixCoupleIds(){
+  nextCoupleId = couplesEvent.couples.reduce((m, c) => Math.max(m, c.id || 0), 0) + 1;
+}
+function coupleLabel(c){ return `${c.a} & ${c.b}`; }
+function coupleById(id){ return couplesEvent.couples.find(c => c.id === id); }
+function coupleTotal(c){ return (c.d1 || 0) + (c.d2 || 0); }
+
+function couplesChanged(){
+  renderCouples();
+  schedulePersist();
+  scheduleSettingsPush();
+}
+
+function addCouple(){
+  const a = $('coupA').value.trim(), b = $('coupB').value.trim();
+  if(!a || !b){ toast('Enter both partners\u2019 names.'); return; }
+  couplesEvent.couples.push({id: nextCoupleId++, a, b, flight:'A', d1:null, d2:null});
+  $('coupA').value = ''; $('coupB').value = ''; $('coupA').focus();
+  toast(`Added ${a} & ${b} (Flight A — tap the badge to change).`);
+  couplesChanged();
+}
+
+function cycleFlight(c){
+  c.flight = c.flight === 'A' ? 'B' : (c.flight === 'B' ? 'C' : 'A');
+  couplesChanged();
+}
+
+function setCoupleDay(d){
+  couplesEvent.day = d;
+  couplesChanged();
+}
+
+/* Shotgun draw for the CURRENT day: pair within each flight first, then pair
+   flight leftovers; a final leftover couple plays their own hole as a twosome.
+   Past 18 groups, doubled holes tee off as a flagged 2nd wave. */
+function assignCouplesToHoles(){
+  const cs = couplesEvent.couples;
+  if(cs.length < 1){ toast('Register at least one couple first.'); return; }
+  const groups = [];
+  const leftovers = [];
+  ['A','B','C'].forEach(f => {
+    const fl = shuffle(cs.filter(c => (c.flight || 'A') === f));
+    while(fl.length >= 2) groups.push([fl.shift(), fl.shift()]);
+    if(fl.length) leftovers.push(fl[0]);
+  });
+  while(leftovers.length >= 2) groups.push([leftovers.shift(), leftovers.shift()]);
+  if(leftovers.length) groups.push([leftovers[0]]);
+
+  const shuffledGroups = shuffle(groups);
+  const holes = shuffle(Array.from({length:18}, (_, i) => i + 1));
+  couplesEvent.assignment[couplesEvent.day] = shuffledGroups.map((g, i) => ({
+    hole: holes[i % 18],
+    wave: Math.floor(i / 18) + 1,
+    coupleIds: g.map(c => c.id)
+  })).sort((x, y) => x.hole - y.hole || x.wave - y.wave);
+  toast(`Day ${couplesEvent.day}: ${groups.length} starting group${groups.length === 1 ? '' : 's'} assigned.`);
+  couplesChanged();
+}
+
+function flightResults(){
+  const out = {};
+  ['A','B','C'].forEach(f => {
+    const list = couplesEvent.couples
+      .filter(c => (c.flight || 'A') === f)
+      .slice()
+      .sort((x, y) => coupleTotal(x) - coupleTotal(y) || coupleLabel(x).localeCompare(coupleLabel(y)));
+    let pos = 0, prev = null;
+    list.forEach((c, i) => {
+      const t = coupleTotal(c);
+      if(prev === null || t !== prev){ pos = i + 1; prev = t; }
+      c._pos = pos;
+    });
+    if(list.length) out[f] = list;
+  });
+  return out;
+}
+
+function renderCouples(){
+  const nameEl = $('coupName');
+  if(nameEl && nameEl.value !== couplesEvent.name) nameEl.value = couplesEvent.name || '';
+
+  // Day toggle state
+  const d1b = $('dayBtn1'), d2b = $('dayBtn2');
+  if(d1b) d1b.className = 'btn ghost' + (couplesEvent.day === 1 ? ' day-active' : '');
+  if(d2b) d2b.className = 'btn ghost' + (couplesEvent.day === 2 ? ' day-active' : '');
+
+  // Registered couples
+  const list = $('couplesList');
+  list.innerHTML = '';
+  if(couplesEvent.couples.length === 0){
+    list.innerHTML = '<p class="empty-msg">No couples registered yet.</p>';
+  }
+  couplesEvent.couples.forEach(c => {
+    const row = document.createElement('div');
+    row.className = 'couple-row';
+    const name = document.createElement('span');
+    name.className = 'couple-name';
+    name.textContent = coupleLabel(c);
+    const fb = document.createElement('button');
+    fb.type = 'button';
+    fb.className = 'flight-badge' + (c.flight === 'B' ? ' fB' : (c.flight === 'C' ? ' fC' : ''));
+    fb.textContent = 'Flight ' + (c.flight || 'A');
+    fb.title = 'Tap to cycle flight';
+    fb.addEventListener('click', () => cycleFlight(c));
+    const x = document.createElement('button');
+    x.type = 'button'; x.className = 'del-btn'; x.textContent = '\u2715';
+    x.title = `Remove ${coupleLabel(c)}`;
+    x.addEventListener('click', () => {
+      couplesEvent.couples = couplesEvent.couples.filter(k => k.id !== c.id);
+      [1, 2].forEach(d => {
+        couplesEvent.assignment[d] = couplesEvent.assignment[d]
+          .map(a => ({...a, coupleIds: a.coupleIds.filter(id => id !== c.id)}))
+          .filter(a => a.coupleIds.length);
+      });
+      toast(`${coupleLabel(c)} removed.`);
+      couplesChanged();
+    });
+    row.appendChild(name); row.appendChild(fb); row.appendChild(x);
+    list.appendChild(row);
+  });
+
+  // Current day's starting holes + that day's score entry
+  const day = couplesEvent.day;
+  const asg = couplesEvent.assignment[day];
+  const assignArea = $('couplesAssignArea');
+  assignArea.innerHTML = '';
+  if(asg.length){
+    const title = document.createElement('h3');
+    title.className = 'eyebrow';
+    title.textContent = `${couplesEvent.name || 'Couples Tournament'} \u2014 Day ${day} Starting Holes`;
+    assignArea.appendChild(title);
+    if(asg.some(a => a.wave > 1)){
+      const warn = document.createElement('p');
+      warn.className = 'couples-warn';
+      warn.textContent = '\u26a0 More than 18 groups \u2014 doubled holes tee off as a 2nd wave.';
+      assignArea.appendChild(warn);
+    }
+    asg.forEach(a => {
+      const hc = holeConfig.find(h => h.hole === a.hole);
+      a.coupleIds.forEach((id, i) => {
+        const c = coupleById(id);
+        if(!c) return;
+        const row = document.createElement('div');
+        row.className = 'grp team-row';
+        const label = document.createElement('span');
+        label.className = 'hole-label';
+        label.textContent = i === 0 ? `Hole ${a.hole}${a.wave > 1 ? ' \u00b7 W2' : ''}:` : '';
+        label.title = hc ? `Par ${hc.par}` : '';
+        const name = document.createElement('span');
+        name.style.flex = '1';
+        name.textContent = `${coupleLabel(c)} (Fl. ${c.flight || 'A'})`;
+        const cell = document.createElement('div');
+        cell.className = 'score-cell';
+        const key = 'd' + day;
+        const cur = (c[key] === null || c[key] === undefined) ? null : c[key];
+        const down = document.createElement('button');
+        down.type = 'button'; down.className = 'score-btn'; down.textContent = 'Down';
+        const val = document.createElement('span');
+        val.className = 'score-value';
+        val.textContent = cur === null ? '\u2014' : formatScore(cur);
+        const up = document.createElement('button');
+        up.type = 'button'; up.className = 'score-btn'; up.textContent = 'Up';
+        down.addEventListener('click', () => { c[key] = (cur === null ? 0 : cur) - 1; couplesChanged(); });
+        up.addEventListener('click', () => { c[key] = (cur === null ? 0 : cur) + 1; couplesChanged(); });
+        cell.appendChild(down); cell.appendChild(val); cell.appendChild(up);
+        row.appendChild(label); row.appendChild(name); row.appendChild(cell);
+        assignArea.appendChild(row);
+      });
+    });
+  }
+
+  // Flight results: Day 1 + Day 2 + two-day total
+  const flightsArea = $('couplesFlightsArea');
+  flightsArea.innerHTML = '';
+  const anyAssigned = couplesEvent.assignment[1].length || couplesEvent.assignment[2].length;
+  if(anyAssigned){
+    const results = flightResults();
+    Object.keys(results).forEach(f => {
+      const title = document.createElement('h3');
+      title.className = 'eyebrow';
+      title.textContent = `Flight ${f} \u2014 Two-Day Results`;
+      flightsArea.appendChild(title);
+      const table = document.createElement('table');
+      table.className = 'standings';
+      table.innerHTML = '<thead><tr><th class="num">Pos</th><th>Couple</th><th class="num">Day 1</th><th class="num">Day 2</th><th class="num">Total</th></tr></thead>';
+      const tb = document.createElement('tbody');
+      results[f].forEach(c => {
+        const tr = document.createElement('tr');
+        [String(c._pos), coupleLabel(c),
+         c.d1 === null ? '\u2014' : formatScore(c.d1),
+         c.d2 === null ? '\u2014' : formatScore(c.d2),
+         formatScore(coupleTotal(c))
+        ].forEach((txt, i) => {
+          const td = document.createElement('td');
+          if(i !== 1) td.className = 'num';
+          td.textContent = txt;
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+      table.appendChild(tb);
+      flightsArea.appendChild(table);
+    });
+  }
+}
+
+function clearCouplesTournament(){
+  if(couplesEvent.couples.length === 0 && !couplesEvent.name){ toast('Nothing to clear.'); return; }
+  const scope = syncOnline ? 'on every device' : 'on this device';
+  if(!confirm(`Clear the whole couples tournament ${scope}? Registered couples, both days\u2019 holes, and scores will be removed.`)) return;
+  couplesEvent = normalizeCouplesEvent(null);
+  nextCoupleId = 1;
+  toast('Couples tournament cleared.');
+  couplesChanged();
+}
+
+function printCouplesSheet(){
+  if(couplesEvent.assignment[couplesEvent.day].length === 0){ toast(`Assign Day ${couplesEvent.day} holes first.`); return; }
+  document.body.classList.add('print-couples');
+  const cleanup = () => document.body.classList.remove('print-couples');
+  if(window.addEventListener) window.addEventListener('afterprint', cleanup, {once:true});
+  setTimeout(cleanup, 2000);   // fallback if afterprint never fires
+  window.print();
+}
+
+/* =========================================================================
    CLOUD SYNC (Supabase) — the shared source of truth when configured.
    Tables: players(id,name), pairing_history(id,week_date,label,pairs,notes,
    attendees,created_at), settings(id=1,data). Device auto-save below acts
@@ -1778,6 +2234,10 @@ async function dbLoadAll(){
       $('sponsorsBox').value = sponsorsText;
     }
     if(d.buyin !== undefined) $('payoutBuyin').value = d.buyin;
+    if(d.couples && Array.isArray(d.couples.couples)){
+      couplesEvent = normalizeCouplesEvent(d.couples);
+      fixCoupleIds();
+    }
   }
 }
 
@@ -1797,6 +2257,10 @@ function applyDeviceWorkingState(){
     weekNotesValue = d.weekNotes || weekNotesValue;
     lastRepeatInfo = d.repeatInfo || null;
     lastOverflow = !!d.overflow;
+    if(d.couples && Array.isArray(d.couples.couples)){
+      couplesEvent = normalizeCouplesEvent(d.couples);
+      fixCoupleIds();
+    }
     lastResults = (d.card || []).map(h => ({
       hole: h.hole, par: h.par,
       teams: (h.teams || []).map(t => ({
@@ -1814,7 +2278,8 @@ function scheduleSettingsPush(){
   clearTimeout(settingsTimer);
   settingsTimer = setTimeout(() => {
     sb.from('settings')
-      .upsert({id: 1, data: {holes: holeConfig, sponsors: sponsorsText, buyin: $('payoutBuyin').value},
+      .upsert({id: 1, data: {holes: holeConfig, sponsors: sponsorsText, buyin: $('payoutBuyin').value,
+                             couples: couplesEvent},
                updated_at: new Date().toISOString()})
       .then(({error}) => { if(error) setSyncStatus('Settings sync failed — press Sync Now.', true); });
   }, 600);
@@ -1865,6 +2330,7 @@ async function syncNow(userInitiated){
     renderHoleGrid();
     renderPlayerGrid($('playerBox').value);
     renderHistory();
+  renderCouples();
     persistNow();
     setSyncStatus(`Synced ${new Date().toLocaleTimeString()} \u2014 ${players.length} players, ${weeklyHistory.length} saved week(s).`);
     if(userInitiated) toast('Up to date with the shared database.');
@@ -1913,6 +2379,7 @@ function persistNow(){
       weekNotes: weekNotesValue,
       repeatInfo: lastRepeatInfo,
       overflow: lastOverflow,
+      couples: couplesEvent,
       card: lastResults.map(h => ({
         hole: h.hole, par: h.par,
         teams: h.teams.map(t => ({players: t.players.map(p => p.name), solo: t.type === 'solo', score: t.score}))
@@ -1952,6 +2419,10 @@ function restoreFromStorage(){
     weekNotesValue = d.weekNotes || '';
     lastRepeatInfo = d.repeatInfo || null;
     lastOverflow = !!d.overflow;
+    if(d.couples && Array.isArray(d.couples.couples)){
+      couplesEvent = normalizeCouplesEvent(d.couples);
+      fixCoupleIds();
+    }
     lastResults = (d.card || []).map(h => ({
       hole: h.hole, par: h.par,
       teams: (h.teams || []).map(t => ({
@@ -2004,6 +2475,7 @@ function loadSeasonJSON(e){
         weeklyHistory.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
         rebuildPairHistory();
         renderHistory();
+  renderCouples();
         toast(`Imported ${data.length} week(s) of history.`);
       } else if(data && (data.app === 'golf-scramble' || data.roster)){
         // Full season file: replace roster + history
@@ -2034,6 +2506,7 @@ function loadSeasonJSON(e){
         rebuildPairHistory();
         renderPlayerGrid($('playerBox').value);
         renderHistory();
+  renderCouples();
         $('seasonCard').open = true;
         if(syncOnline && sb){
           if(confirm('Also replace the SHARED database with this season file? Every device will see this data.')){
@@ -2365,7 +2838,31 @@ function renderTVBoard(){
 /* =========================================================================
    INIT
    ========================================================================= */
+const APP_VIEWS = ['checkin','pairings','couples','season','settings'];
+function showView(v){
+  APP_VIEWS.forEach(k => {
+    const view = $('view-' + k), nav = $('nav-' + k);
+    if(view) view.classList.toggle('active', k === v);
+    if(nav) nav.classList.toggle('active', k === v);
+  });
+  document.body.classList.remove('nav-open');       // menu re-collapses after a pick
+  $('navToggle').textContent = '☰';
+  window.scrollTo(0, 0);
+}
+
 function bindEvents(){
+  APP_VIEWS.forEach(k => $('nav-' + k).addEventListener('click', () => showView(k)));
+  $('navToggle').addEventListener('click', () => {
+    const open = document.body.classList.toggle('nav-open');
+    $('navToggle').textContent = open ? '✕' : '☰';
+  });
+  $('editRosterBtn').addEventListener('click', () => {
+    const on = document.body.classList.toggle('roster-edit');
+    $('editRosterBtn').classList.toggle('edit-roster-on', on);
+    $('editRosterBtn').textContent = on ? '✏️ Done editing' : '✏️ Edit roster';
+    if(on) toast('Edit mode — tap the ✕ beside a player to remove them.');
+  });
+  showView('checkin');                        // land on the check-in page
   $('playerBox').addEventListener('input', e => renderPlayerGrid(e.target.value));
   $('playerBox').addEventListener('keydown', e => { if(e.key === 'Enter') onPlayerBoxEnter(); });
   $('selectAllBtn').addEventListener('click', () => {
@@ -2382,6 +2879,14 @@ function bindEvents(){
   $('genScoredBtn').addEventListener('click', () => generateSchedule('scored'));
   $('clearDeviceBtn').addEventListener('click', clearDeviceData);
   $('syncNowBtn').addEventListener('click', () => syncNow(true));
+  $('addCoupleBtn').addEventListener('click', addCouple);
+  $('coupB').addEventListener('keydown', e => { if(e.key === 'Enter') addCouple(); });
+  $('coupName').addEventListener('input', e => { couplesEvent.name = e.target.value; schedulePersist(); scheduleSettingsPush(); });
+  $('dayBtn1').addEventListener('click', () => setCoupleDay(1));
+  $('dayBtn2').addEventListener('click', () => setCoupleDay(2));
+  $('assignCouplesBtn').addEventListener('click', assignCouplesToHoles);
+  $('clearCouplesBtn').addEventListener('click', clearCouplesTournament);
+  $('printCouplesBtn').addEventListener('click', printCouplesSheet);
   $('payoutBuyin').addEventListener('input', () => { renderPayout(); schedulePersist(); scheduleSettingsPush(); });
   $('exportHistoryCsvBtn').addEventListener('click', exportHistoryCSV);
   $('clearHistoryBtn').addEventListener('click', clearHistory);
@@ -2413,6 +2918,7 @@ async function init(){
       renderHoleGrid();
       renderPlayerGrid('');
       renderHistory();
+  renderCouples();
       if(lastResults.length) renderResults();
       persistNow();                               // refresh the offline cache
       setSyncStatus(`Connected — ${players.length} players, ${weeklyHistory.length} saved week(s).`);
@@ -2435,6 +2941,7 @@ async function init(){
   renderHoleGrid();
   renderPlayerGrid('');
   renderHistory();
+  renderCouples();
   if(lastResults.length) renderResults();
   if(restored) toast('Restored from this device’s saved data.');
 }
