@@ -26,7 +26,6 @@
   --chip:#e9e4d5;
   --shadow:0 1px 2px rgba(36,49,42,.08), 0 4px 14px rgba(36,49,42,.06);
 }
-@media (prefers-color-scheme: dark){
   :root{
     --paper:#141b17; --card:#1b2420; --card2:#161e1a;
     --ink:#e8ece7; --muted:#95a49a;
@@ -35,7 +34,6 @@
     --flag:#e0705c; --chip:#243029;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
   }
-}
 
 /* ---------- Base ---------- */
 *{box-sizing:border-box;}
@@ -91,18 +89,16 @@ button{font-family:inherit;}
   opacity:.85;
 }
 #todayDate{font-size:.84rem; margin-top:10px; opacity:.95;}
-@media (prefers-color-scheme: dark){ .masthead{color:#e8ece7;} }
+ .masthead{color:#e8ece7;} 
 
 /* In dark mode --fairway-deep flips to a LIGHT accent green, which is right
    for borders/text but wrong as a backdrop for cream text. Keep the green
    "surfaces" deep so the lettering stays readable. */
-@media (prefers-color-scheme: dark){
   .masthead{background:#1c3529;}
   #sideNav{background:#122820;}
   .nav-item{color:#e8ece7;}
   #floatBtns button{background:#1c3529; color:#e8ece7;}
   .hole-head{background:linear-gradient(to right, #2a4d3a, #1c3529); color:#e8ece7;}
-}
 
 /* ---------- App shell: left nav rail + content ---------- */
 .appbody{display:flex; align-items:stretch; max-width:none; margin:0;}
@@ -203,7 +199,7 @@ button.btn.secondary{background:transparent; color:var(--fairway); border:1.5px 
 button.btn.ghost{background:transparent; color:var(--muted); border:1px solid var(--tee-soft); font-weight:500;}
 button.btn.danger{background:transparent; color:var(--flag); border:1px solid var(--flag);}
 button.btn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
-@media (prefers-color-scheme: dark){ button.btn{color:#10160f;} }
+ button.btn{color:#10160f;} 
 
 .small-note{font-size:.76rem; color:var(--muted); margin-top:8px;}
 .count-badge{
@@ -239,7 +235,7 @@ button.btn:disabled{opacity:.35; cursor:not-allowed; filter:none;}
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .player-select.selected{background:var(--fairway); color:#fff; border-color:var(--fairway-deep); font-weight:600;}
-@media (prefers-color-scheme: dark){ .player-select.selected{color:#10160f;} }
+ .player-select.selected{color:#10160f;} 
 @media (prefers-reduced-motion: reduce){ .player-select{transition:none;} }
 /* Roster edit mode: the per-player ✕ only exists while editing */
 #playerGrid .del-btn{display:none;}
@@ -282,7 +278,7 @@ body.roster-edit #playerGrid .del-btn{display:inline-block;}
 }
 .pname.swappable:hover{background:var(--chip);}
 .pname.swap-picked{background:var(--fairway); color:#fff; border-style:solid;}
-@media (prefers-color-scheme: dark){ .pname.swap-picked{color:#10160f;} }
+ .pname.swap-picked{color:#10160f;} 
 .pjoin{color:var(--muted); padding:0 5px;}
 .own-ball{font-size:.74rem; color:var(--muted); font-style:italic; padding-left:6px;}
 .leader-line{
@@ -360,10 +356,8 @@ details.week-entry > summary::-webkit-details-marker{display:none;}
 .hole-cell.active .hole-toggle{color:#fff;}
 .par-btn{border:none; background:transparent; cursor:pointer; font-size:.64rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding:0 4px 7px;}
 .hole-cell.active .par-btn{color:rgba(255,255,255,.85);}
-@media (prefers-color-scheme: dark){
   .hole-cell.active .hole-toggle{color:#10160f;}
   .hole-cell.active .par-btn{color:rgba(16,22,15,.75);}
-}
 
 /* ---------- Payouts ---------- */
 input[type=number]{
@@ -436,12 +430,45 @@ body.tv-mode #tvBoard{display:grid;}
   text-transform:uppercase; color:var(--fairway); margin:0 0 12px;
   border-bottom:2px solid var(--tee-soft); padding-bottom:6px;
 }
-.tv-holes{display:block; column-count:3; column-gap:12px;}   /* fills top-down, then across */
-#tvBoard .hole-block{margin-bottom:10px; break-inside:avoid; -webkit-column-break-inside:avoid;}
-#tvBoard .hole-head{padding:7px 14px;}
-#tvBoard .hole-num{font-size:1.15rem;}
-#tvBoard .team-row{padding:5px 14px;}
-#tvBoard .pname{font-size:1.05rem;}
+#tvBoard{--tv-scale:1;}   /* recomputed by JS so tiles always fill the screen without scrolling */
+.tv-holes{
+  display:block; column-count:var(--tv-cols, 3); column-gap:calc(12px * var(--tv-scale));
+}   /* fills top-down, then across */
+#tvBoard .hole-block{
+  margin-bottom:calc(10px * var(--tv-scale)); break-inside:avoid; -webkit-column-break-inside:avoid;
+}
+/* ---- TV distance-readability pass: matchup tiles ----
+   Solid high-contrast surfaces and bold text. Every size below is scaled by
+   --tv-scale, which JS recalculates on every render/resize so the tiles
+   always fill the screen — bigger with fewer holes, smaller with more —
+   without ever needing to scroll. Scoped entirely to #tvBoard. */
+#tvBoard .hole-block{
+  background:#000000; border:calc(3px * var(--tv-scale)) solid #d8c48a;
+  border-radius:calc(10px * var(--tv-scale));
+  box-shadow:0 4px 14px rgba(0,0,0,.5);
+}
+#tvBoard .hole-head{
+  padding:calc(11px * var(--tv-scale)) calc(18px * var(--tv-scale));
+  background:#d8c48a; border-bottom:none;
+}
+#tvBoard .hole-num{font-size:calc(1.7rem * var(--tv-scale)); font-weight:800; color:#161005; letter-spacing:.02em;}
+#tvBoard .hole-par{font-size:calc(.9rem * var(--tv-scale)); font-weight:700; letter-spacing:.12em; color:#3c3115;}
+#tvBoard .team-row{
+  padding:calc(13px * var(--tv-scale)) calc(18px * var(--tv-scale));
+  border-top:2px solid #33322a; gap:calc(14px * var(--tv-scale));
+}
+#tvBoard .team-row:nth-of-type(even){background:rgba(255,255,255,.035);}
+#tvBoard .pname{
+  font-size:calc(1.75rem * var(--tv-scale)); font-weight:800; color:#ffffff;
+  line-height:1.25; letter-spacing:.01em;
+}
+#tvBoard .pjoin{color:#d8c48a; font-size:calc(1.4rem * var(--tv-scale)); font-weight:700; padding:0 calc(9px * var(--tv-scale));}
+#tvBoard .own-ball{
+  font-size:calc(1.02rem * var(--tv-scale)); font-weight:800; color:#161005; background:#d8c48a;
+  font-style:normal; letter-spacing:.04em; padding:calc(3px * var(--tv-scale)) calc(9px * var(--tv-scale));
+  border-radius:5px; margin-left:calc(8px * var(--tv-scale));
+}
+#tvBoard .leader-line{display:none;}   /* a scoring artifact — no scores show on the dashboard */
 #tvBoard .score-value{min-width:66px; font-size:1.25rem;}
 #tvBoard .score-btn{padding:9px 13px; font-size:.8rem;}
 #tvBoard .results-meta{font-size:.95rem;}
@@ -458,11 +485,19 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
   gap:10px; margin-top:12px;
 }
 .masthead .pay-strip-title{color:#f4f1e6; opacity:.85;}
-.masthead .pay-chip{background:rgba(255,255,255,.1); border-color:rgba(244,241,230,.3); box-shadow:none;}
-.masthead .pay-chip .pay-label{color:rgba(244,241,230,.75);}
-.masthead .pay-chip .pay-amount{color:#f4f1e6;}
-.masthead .pay-chip.pool{border-color:rgba(244,241,230,.55);}
-.masthead .pay-chip.place .pay-amount{color:#f2cf8d;}
+/* ---- TV distance-readability pass: payout tiles ----
+   Solid dark tiles with a bright border and bold text instead of the
+   faint translucent chips, so the numbers read clearly from across the room. */
+.masthead .pay-chip{
+  background:#000000; border:3px solid #7fa088; box-shadow:0 4px 14px rgba(0,0,0,.45);
+  padding:11px 22px;
+}
+.masthead .pay-chip .pay-label{color:#ffffff; font-size:.82rem; font-weight:800; letter-spacing:.14em;}
+.masthead .pay-chip .pay-amount{color:#ffffff; font-size:1.55rem; font-weight:800;}
+.masthead .pay-chip.pool{border-color:#7fa088;}
+.masthead .pay-chip.place{background:#1c1204; border-color:#e8cf8f;}
+.masthead .pay-chip.place .pay-label{color:#f2e2b8;}
+.masthead .pay-chip.place .pay-amount{color:#f2cf8d; font-size:1.85rem;}
 .pay-strip-title{
   align-self:center; font-family:Georgia,serif; font-size:1rem; letter-spacing:.16em;
   text-transform:uppercase; color:var(--fairway); padding-right:6px;
@@ -484,7 +519,6 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
 
 @media(max-width:1100px){
   #tvBoard{padding:18px;}
-  .tv-holes{column-count:1;}
 }
 /* Fine-tune for the actual 1920x1080 cast: payouts run across the top,
    matchups fill a 3-column grid, and spacing is compacted so a full 3x3
@@ -492,15 +526,14 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
 @media(min-width:1800px){
   body.tv-mode{font-size:18px;}
   #tvBoard{padding:14px 44px 18px; gap:10px;}
-  .tv-holes{column-count:3; column-gap:10px;}
-  #tvBoard .hole-block{margin-bottom:10px;}
+  #tvBoard .hole-block{margin-bottom:calc(10px * var(--tv-scale));}
   #tvBoard .tv-col-title{font-size:.98rem; margin-bottom:7px; padding-bottom:4px;}
   #tvBoard .results-meta{font-size:.82rem; margin:0 0 7px;}
-  #tvBoard .hole-head{padding:5px 12px;}
-  #tvBoard .hole-num{font-size:1.05rem;}
-  #tvBoard .hole-par{font-size:.66rem;}
-  #tvBoard .team-row{padding:5px 12px; gap:8px;}
-  #tvBoard .pname{font-size:.98rem;}
+  #tvBoard .hole-head{padding:7px 14px;}
+  #tvBoard .hole-num{font-size:1.3rem;}
+  #tvBoard .hole-par{font-size:.78rem;}
+  #tvBoard .team-row{padding:8px 14px; gap:10px;}
+  #tvBoard .pname{font-size:1.32rem;}
   #tvBoard .score-value{min-width:60px; font-size:1.1rem; padding:1px 3px;}
   #tvBoard .score-btn{padding:5px 10px; font-size:.7rem;}
   .tv-paytop{gap:8px;}
@@ -617,6 +650,9 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
     <p class="small-note" style="margin-top:0;">Tap a hole number to put it in or out of play for team tees (green = in play). Tap the par label to cycle it 3 → 4 → 5. Par 3s can be used too — just switch them on. The setup is saved in your season file.</p>
     <div class="hole-grid" id="holeGrid"></div>
     <p class="preview-line" id="holesSummary" style="margin-top:10px;"></p>
+    <label for="threeManInput" style="margin-top:14px;">3-person scramble threshold</label>
+    <input type="number" id="threeManInput" min="6" max="90" step="1" style="max-width:120px;">
+    <p class="small-note">When attendance reaches this number, teams switch from 2-person to 3-person for the round. Set higher than your usual field size to keep 2-person teams always, or lower it for big turnouts.</p>
   </section>
   <!-- ============ SPONSORS ============ -->
   <section class="card no-print" id="sponsorCard">
@@ -663,7 +699,7 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
       <button class="btn secondary" id="genRandomBtn">🎲 Generate — fully random</button>
     </div>
     <p class="preview-line" id="previewLine"></p>
-    <p class="small-note">Everyone gets one partner for the whole round; no one appears on two holes. Only holes switched on in Course Setup are used for team tees. Each hole takes 2 teams; bigger groups add a 3rd team spread across as many holes as needed (max 3 per hole). An odd player plays their own ball and is placed on a 3-team hole whenever one exists — and never draws their own ball two weeks in a row. "Fresh partners" only avoids repeating last week’s pairings — after a week apart, two players can be drawn together again. "Score-balanced" pairs last week’s low rounds with high rounds (season average as fallback) so teams start out even — the bottom-half partner is drawn randomly, still steering around repeats.</p>
+    <p class="small-note">Everyone gets one partner for the whole round; no one appears on two holes. Only holes switched on in Course Setup are used for team tees. Each hole takes 2 teams; bigger groups add a 3rd team spread across as many holes as needed (max 3 per hole). Below the 3-person threshold (set in Course Setup), teams are 2-person; at or above it, teams switch to 3-person. A single leftover player joins a random trio as a 4-person team rather than playing their own ball; two leftover players ride as a bonus pair. Nobody draws their own ball two weeks in a row. "Fresh partners" only avoids repeating last week’s pairings — after a week apart, two players can be drawn together again. "Score-balanced" pairs last week’s low rounds with high rounds (season average as fallback) so teams start out even — the bottom-half partner is drawn randomly, still steering around repeats.</p>
   </section>
 
   <!-- ============ SCORECARD / RESULTS ============ -->
@@ -769,8 +805,8 @@ body.tv-mode #mastPayout{display:block; grid-column:1 / -1;}
    - anon public key:  the long key labeled "anon" / "public"
    Leave the placeholders as-is to run fully offline (no sync).
    ========================================================================= */
-const SUPABASE_URL      = "https://jfhnivsshumltxzngfvp.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmaG5pdnNzaHVtbHR4em5nZnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNTEyODksImV4cCI6MjA5OTYyNzI4OX0.woeiN9mnXYuw8ezUkH5o_DIpsaG2QOKt0TO33i2sdIg";
+const SUPABASE_URL      = "PASTE-YOUR-PROJECT-URL-HERE";
+const SUPABASE_ANON_KEY = "PASTE-YOUR-ANON-PUBLIC-KEY-HERE";
 
 /* ========================================================================= */
 
@@ -787,6 +823,11 @@ const DEFAULT_HOLES = [
   {hole:16, par:4, active:true},  {hole:17, par:5, active:true},  {hole:18, par:5, active:true}
 ];
 let holeConfig = DEFAULT_HOLES.map(h => ({...h}));
+let threeManThreshold = 35;   // attendance at/above this switches to 3-person teams
+
+function currentTeamSize(attendeeCount){
+  return attendeeCount >= threeManThreshold ? 3 : 2;
+}
 
 function activeHoles(){ return holeConfig.filter(h => h.active); }
 function maxTeams(){ return activeHoles().length * 3; }   // up to 3 teams per hole when the group is big
@@ -905,12 +946,17 @@ function rebuildPairHistory(){
   if(!lastWeek) return;
   (lastWeek.holes || []).forEach(h => {
     (h.teams || []).forEach(t => {
-      if(t.players && t.players.length === 2){
-        const k = pairKeyNames(t.players[0], t.players[1]);
-        pairHistory[k] = (pairHistory[k] || 0) + 1;
+      const names = (t.players || []).map(p => typeof p === 'string' ? p : p.name);
+      if(names.length === 1){
+        lastSoloNames.add(names[0].trim().toLowerCase());
       }
-      if(t.players && t.players.length === 1){
-        lastSoloNames.add(String(t.players[0]).trim().toLowerCase());
+      // Every pairwise combo within the team counts as a partnership to avoid
+      // repeating — this covers 2-person teams AND every pair inside a trio.
+      for(let i = 0; i < names.length; i++){
+        for(let j = i + 1; j < names.length; j++){
+          const k = pairKeyNames(names[i], names[j]);
+          pairHistory[k] = (pairHistory[k] || 0) + 1;
+        }
       }
     });
   });
@@ -925,11 +971,11 @@ function fixSoloRepeat(teams){
   if(!teams) return teams;
   const solo = teams.find(t => t.type === 'solo');
   if(!solo || !wasSoloLastWeek(solo.players[0].name)) return teams;
-  const pair = teams.find(t => t.type === 'pair' && t.players.some(p => !wasSoloLastWeek(p.name)));
-  if(!pair) return teams;
-  const mIdx = pair.players.findIndex(p => !wasSoloLastWeek(p.name));
-  const swapped = pair.players[mIdx];
-  pair.players[mIdx] = solo.players[0];   // last week's solo joins the pair
+  const target = teams.find(t => t.type !== 'solo' && t.players.some(p => !wasSoloLastWeek(p.name)));
+  if(!target) return teams;
+  const mIdx = target.players.findIndex(p => !wasSoloLastWeek(p.name));
+  const swapped = target.players[mIdx];
+  target.players[mIdx] = solo.players[0]; // last week's solo joins this team
   solo.players[0] = swapped;              // this teammate takes their own ball instead
   return teams;
 }
@@ -951,13 +997,16 @@ function greedyPair(pool){
   return teams;
 }
 
-function scorePairing(teams){   // [repeatPairCount, totalPastMeetings]
+function scorePairing(teams){   // [repeatPairCount, totalPastMeetings] across every combo in every team
   let repeats = 0, total = 0;
   teams.forEach(t => {
-    if(t.players.length === 2){
-      const c = histCountNames(t.players[0].name, t.players[1].name);
-      if(c > 0) repeats++;
-      total += c;
+    const ps = t.players;
+    for(let i = 0; i < ps.length; i++){
+      for(let j = i + 1; j < ps.length; j++){
+        const c = histCountNames(ps[i].name, ps[j].name);
+        if(c > 0) repeats++;
+        total += c;
+      }
     }
   });
   return [repeats, total];
@@ -987,7 +1036,100 @@ function playerRating(name){
   return rounds ? total / rounds : null;
 }
 
+/* Greedy grouping into teams of `size`: repeatedly take the next player and
+   add the `size-1` teammates with the fewest past meetings (summed) with the
+   group so far. Generalizes greedyPair to trios (or any team size). */
+function greedyGroup(pool, size){
+  const teams = [];
+  const p = pool.slice();
+  while(p.length >= size){
+    const group = [p.shift()];
+    while(group.length < size){
+      let bestIdx = 0, bestScore = Infinity;
+      p.forEach((cand, i) => {
+        const s = group.reduce((sum, g) => sum + histCountNames(g.name, cand.name), 0);
+        if(s < bestScore){ bestScore = s; bestIdx = i; }
+      });
+      group.push(p.splice(bestIdx, 1)[0]);
+    }
+    teams.push({type: size === 2 ? 'pair' : 'group', players: group, score:0});
+  }
+  return {teams, leftover: p};
+}
+
+/* Leftover players (1 or 2, when the field doesn't divide evenly by 3).
+   A single leftover joins a random trio, making that one team a 4-person
+   group, instead of playing their own ball. Two leftovers ride as a bonus
+   pair alongside the trios. */
+function placeLeftovers(teams, leftover){
+  if(leftover.length === 1){
+    const groups = teams.filter(t => t.type === 'group');
+    const target = groups.length ? groups[Math.floor(Math.random() * groups.length)] : null;
+    if(target) target.players.push(leftover[0]);
+    else teams.push({type:'solo', players:[leftover[0]], score:0});   // no trio to join — fallback
+  } else if(leftover.length === 2){
+    teams.push({type:'pair', players:leftover, score:0});
+  }
+  return teams;
+}
+
+function formTeamsOfThree(attendees, mode){
+  if(mode === 'random'){
+    const pool = shuffle(attendees);
+    const teams = [];
+    while(pool.length >= 3) teams.push({type:'group', players:[pool.shift(), pool.shift(), pool.shift()], score:0});
+    return fixSoloRepeat(placeLeftovers(teams, pool));
+  }
+  if(mode === 'scored'){
+    // Rank by rating, split into thirds (skilled / mid / less-skilled), and
+    // match one from each third per trio — retried to steer around repeats.
+    const rated = attendees.map(p => ({p, r: playerRating(p.name)}));
+    const known = rated.filter(x => x.r !== null).map(x => x.r).sort((a, b) => a - b);
+    const median = known.length ? known[Math.floor(known.length / 2)] : 0;
+    rated.forEach(x => { if(x.r === null) x.r = median; });
+    const arr = shuffle(rated).sort((a, b) => a.r - b.r);
+
+    const leftoverCount = arr.length % 3;
+    let leftover = [];
+    if(leftoverCount){
+      // pull the fairest leftover(s) from the middle so thirds stay balanced
+      const mid = Math.floor(arr.length / 2);
+      const idxs = leftoverCount === 1 ? [mid] : [mid - 1, mid];
+      leftover = idxs.map(i => arr[i]).map(x => x.p);
+      idxs.sort((a,b)=>b-a).forEach(i => arr.splice(i, 1));
+    }
+    const n = arr.length / 3;
+    const top = arr.slice(0, n).map(x => x.p);
+    const mid = arr.slice(n, 2 * n).map(x => x.p);
+    const bot = arr.slice(2 * n).map(x => x.p);
+
+    let best = null, bestKey = [Infinity, Infinity];
+    for(let i = 0; i < 40; i++){
+      const midS = shuffle(mid), botS = shuffle(bot);
+      const attempt = top.map((tp, j) => ({type:'group', players:[tp, midS[j], botS[j]], score:0}));
+      const key = scorePairing(attempt);
+      if(key[0] < bestKey[0] || (key[0] === bestKey[0] && key[1] < bestKey[1])){
+        best = attempt; bestKey = key;
+        if(bestKey[0] === 0 && bestKey[1] === 0) break;
+      }
+    }
+    return fixSoloRepeat(placeLeftovers(best || [], leftover.length === 2 ? leftover : (leftover.length ? [leftover[0]] : [])));
+  }
+  // balanced (fresh): 40 restarts, keep the least-repetitive grouping
+  let best = null, bestLeft = [], bestKey = [Infinity, Infinity];
+  for(let i = 0; i < 40; i++){
+    const {teams, leftover} = greedyGroup(shuffle(attendees), 3);
+    const key = scorePairing(teams);
+    if(key[0] < bestKey[0] || (key[0] === bestKey[0] && key[1] < bestKey[1])){
+      best = teams; bestLeft = leftover; bestKey = key;
+      if(bestKey[0] === 0 && bestKey[1] === 0) break;
+    }
+  }
+  return fixSoloRepeat(placeLeftovers(best || [], bestLeft));
+}
+
 function formTeams(attendees, mode){
+  if(currentTeamSize(attendees.length) === 3) return formTeamsOfThree(attendees, mode);
   if(mode === 'scored'){
     // Rank by rating; unknowns slot in at the median. Odd count: the
     // mid-pack player takes their own ball (rides on the 3-team hole).
@@ -1114,8 +1256,9 @@ function generateSchedule(mode){
     return;
   }
   const teams = formTeams(attendees, mode);
-  const [repeats] = scorePairing(teams);
-  lastRepeatInfo = {repeats, total: teams.filter(t => t.players.length === 2).length};
+  const [repeats, , ] = scorePairing(teams);
+  const totalCombos = teams.reduce((sum, t) => sum + (t.players.length * (t.players.length - 1)) / 2, 0);
+  lastRepeatInfo = {repeats, total: totalCombos};
 
   const {holesArr, overflow} = assignTeamsToHoles(teams);
   lastResults = holesArr;
@@ -1135,6 +1278,9 @@ function defaultWeekLabel(){
    ========================================================================= */
 function teamNamesLabel(t){
   return t.players.map(p => p.name).join(' / ') + (t.type === 'solo' ? ' (own ball)' : '');
+}
+function teamSizeLabel(n){
+  return n === 1 ? 'Own ball' : (n === 2 ? '2-person' : (n === 3 ? '3-person' : n + '-person'));
 }
 
 function currentLeaderScore(){
@@ -1781,6 +1927,7 @@ function updateCountAndPreview(){
    COURSE SETUP — toggle holes in/out of play; tap par to cycle 3→4→5
    ========================================================================= */
 function renderHoleGrid(){
+  if($('threeManInput') && $('threeManInput').value === '') $('threeManInput').value = threeManThreshold;
   const grid = $('holeGrid');
   grid.innerHTML = '';
   holeConfig.forEach(h => {
@@ -2235,6 +2382,10 @@ async function dbLoadAll(){
       $('sponsorsBox').value = sponsorsText;
     }
     if(d.buyin !== undefined) $('payoutBuyin').value = d.buyin;
+    if(d.threeManThreshold !== undefined){
+      threeManThreshold = Number(d.threeManThreshold) || 35;
+      $('threeManInput').value = threeManThreshold;
+    }
     if(d.couples && Array.isArray(d.couples.couples)){
       couplesEvent = normalizeCouplesEvent(d.couples);
       fixCoupleIds();
@@ -2262,6 +2413,10 @@ function applyDeviceWorkingState(){
       couplesEvent = normalizeCouplesEvent(d.couples);
       fixCoupleIds();
     }
+    if(d.threeManThreshold !== undefined){
+      threeManThreshold = Number(d.threeManThreshold) || 35;
+      $('threeManInput').value = threeManThreshold;
+    }
     lastResults = (d.card || []).map(h => ({
       hole: h.hole, par: h.par,
       teams: (h.teams || []).map(t => ({
@@ -2280,7 +2435,7 @@ function scheduleSettingsPush(){
   settingsTimer = setTimeout(() => {
     sb.from('settings')
       .upsert({id: 1, data: {holes: holeConfig, sponsors: sponsorsText, buyin: $('payoutBuyin').value,
-                             couples: couplesEvent},
+                             threeManThreshold, couples: couplesEvent},
                updated_at: new Date().toISOString()})
       .then(({error}) => { if(error) setSyncStatus('Settings sync failed — press Sync Now.', true); });
   }, 600);
@@ -2381,6 +2536,7 @@ function persistNow(){
       repeatInfo: lastRepeatInfo,
       overflow: lastOverflow,
       couples: couplesEvent,
+      threeManThreshold,
       card: lastResults.map(h => ({
         hole: h.hole, par: h.par,
         teams: h.teams.map(t => ({players: t.players.map(p => p.name), solo: t.type === 'solo', score: t.score}))
@@ -2416,6 +2572,10 @@ function restoreFromStorage(){
       $('sponsorsBox').value = sponsorsText;
     }
     if(d.buyin !== undefined) $('payoutBuyin').value = d.buyin;
+    if(d.threeManThreshold !== undefined){
+      threeManThreshold = Number(d.threeManThreshold) || 35;
+      $('threeManInput').value = threeManThreshold;
+    }
     weekLabelValue = d.weekLabel || '';
     weekNotesValue = d.weekNotes || '';
     lastRepeatInfo = d.repeatInfo || null;
@@ -2423,6 +2583,10 @@ function restoreFromStorage(){
     if(d.couples && Array.isArray(d.couples.couples)){
       couplesEvent = normalizeCouplesEvent(d.couples);
       fixCoupleIds();
+    }
+    if(d.threeManThreshold !== undefined){
+      threeManThreshold = Number(d.threeManThreshold) || 35;
+      $('threeManInput').value = threeManThreshold;
     }
     lastResults = (d.card || []).map(h => ({
       hole: h.hole, par: h.par,
@@ -2787,6 +2951,7 @@ function renderTVBoard(){
 
   /* ---- Today's card ---- */
   const left = document.createElement('div');
+  left.id = 'tvHolesCol';
   const title = document.createElement('h2');
   title.className = 'tv-col-title';
   title.textContent = "Today's Matchups";
@@ -2799,7 +2964,14 @@ function renderTVBoard(){
     left.appendChild(msg);
   } else {
     const holes = document.createElement('div');
+    holes.id = 'tvHolesArea';
     holes.className = 'tv-holes';
+    // Fewer holes = fewer columns, so tiles aren't stranded in a mostly-empty
+    // 3-column grid; the fit routine below then scales everything to fill
+    // whatever screen space that layout leaves.
+    const n = lastResults.length;
+    const cols = n <= 2 ? 1 : (n <= 4 ? 2 : (n <= 9 ? 3 : (n <= 16 ? 4 : 5)));
+    holes.style.setProperty('--tv-cols', cols);
     lastResults.forEach(h => holes.appendChild(tvHoleBlock(h)));
     left.appendChild(holes);
   }
@@ -2834,6 +3006,61 @@ function renderTVBoard(){
     strip.appendChild(rowEl);
     board.appendChild(strip);
   }
+
+  requestAnimationFrame(fitTVHoles);
+}
+
+/* Scales the matchup tiles (via --tv-scale) so they always fill the screen
+   without scrolling — bigger with fewer holes, smaller with more, on any
+   screen size. Two passes: an estimate from natural size, then a corrective
+   pass since font-size changes can reflow line-wrapping and thus height. */
+function fitTVHoles(){
+  const board = $('tvBoard');
+  const holesArea = $('tvHolesArea');
+  if(!board || !holesArea || board.hidden) return;
+
+  const fit = () => {
+    board.style.setProperty('--tv-scale', 1);
+    void board.offsetHeight;   // force layout before measuring
+
+    const col = $('tvHolesCol');
+    const sponsors = board.querySelector('.tv-sponsors');
+    const boardTop = board.getBoundingClientRect().top;
+    const padBottom = parseFloat(getComputedStyle(board).paddingBottom) || 0;
+    const titleH = col.querySelector('.tv-col-title').getBoundingClientRect().height + 12;
+    const sponsorsH = sponsors ? sponsors.getBoundingClientRect().height + 20 : 0;
+    const available = window.innerHeight - boardTop - padBottom - titleH - sponsorsH - 8;
+    const natural = holesArea.scrollHeight;
+    if(natural <= 0) return null;
+    return Math.max(0.5, Math.min(1.9, available / natural));
+  };
+
+  let scale = fit();
+  if(scale === null) return;
+  board.style.setProperty('--tv-scale', scale);
+  void board.offsetHeight;
+  // Corrective pass: re-measure at the applied scale (wrapping may have
+  // changed tile heights) and nudge toward a perfect fit.
+  const col = $('tvHolesCol');
+  const sponsors = board.querySelector('.tv-sponsors');
+  const boardTop = board.getBoundingClientRect().top;
+  const padBottom = parseFloat(getComputedStyle(board).paddingBottom) || 0;
+  const titleH = col.querySelector('.tv-col-title').getBoundingClientRect().height + 12;
+  const sponsorsH = sponsors ? sponsors.getBoundingClientRect().height + 20 : 0;
+  const available2 = window.innerHeight - boardTop - padBottom - titleH - sponsorsH - 8;
+  const actual = holesArea.scrollHeight;
+  if(actual > 0 && actual > available2){
+    scale = Math.max(0.5, scale * (available2 / actual));
+    board.style.setProperty('--tv-scale', scale);
+  }
+}
+
+let tvFitTimer = null;
+if(typeof window !== 'undefined' && window.addEventListener){
+  window.addEventListener('resize', () => {
+    clearTimeout(tvFitTimer);
+    tvFitTimer = setTimeout(() => { if(document.body.classList.contains('tv-mode')) fitTVHoles(); }, 150);
+  });
 }
 
 /* =========================================================================
@@ -2889,6 +3116,11 @@ function bindEvents(){
   $('clearCouplesBtn').addEventListener('click', clearCouplesTournament);
   $('printCouplesBtn').addEventListener('click', printCouplesSheet);
   $('payoutBuyin').addEventListener('input', () => { renderPayout(); schedulePersist(); scheduleSettingsPush(); });
+  $('threeManInput').addEventListener('input', () => {
+    const v = parseInt($('threeManInput').value, 10);
+    threeManThreshold = (!isNaN(v) && v > 0) ? v : 35;
+    schedulePersist(); scheduleSettingsPush();
+  });
   $('exportHistoryCsvBtn').addEventListener('click', exportHistoryCSV);
   $('clearHistoryBtn').addEventListener('click', clearHistory);
   $('saveSeasonBtn').addEventListener('click', saveSeasonJSON);
